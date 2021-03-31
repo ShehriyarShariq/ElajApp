@@ -2,15 +2,19 @@ import 'dart:async';
 
 import 'package:elaj/core/util/constants.dart';
 import 'package:elaj/features/common/appointment_session/presentation/pages/appointment_session.dart';
+import 'package:elaj/features/customer/add_medical_record/domain/entities/medical_record.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ntp/ntp.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class JoinButtonWidget extends StatefulWidget {
+  final String appointmentID;
   final DateTime startTime, endTime;
+  final List<MedicalRecord> records;
 
-  const JoinButtonWidget({Key key, this.startTime, this.endTime})
+  const JoinButtonWidget(
+      {Key key, this.startTime, this.endTime, this.appointmentID, this.records})
       : super(key: key);
 
   @override
@@ -19,8 +23,9 @@ class JoinButtonWidget extends StatefulWidget {
 
 class _JoinButtonWidgetState extends State<JoinButtonWidget> {
   Timer _sessionStartRemainingTimeTimer, _sessionRemainingTimeTimer;
-  String _sessionStartRemainingTime = "", _sessionRemainingTime = "";
-  bool _sessionStarted = false;
+  String _sessionStartRemainingTime = "Calculating...",
+      _sessionRemainingTime = "Calculating...";
+  bool _sessionStarted = false, _isEnabled = false;
 
   @override
   void initState() {
@@ -44,7 +49,7 @@ class _JoinButtonWidgetState extends State<JoinButtonWidget> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          onJoin();
+          if (_isEnabled) onJoin();
         },
         child: Container(
           alignment: Alignment.center,
@@ -67,19 +72,23 @@ class _JoinButtonWidgetState extends State<JoinButtonWidget> {
                   padding: EdgeInsets.symmetric(
                       horizontal: MediaQuery.of(context).size.width * 0.12),
                   margin: const EdgeInsets.only(top: 10),
+                  width: MediaQuery.of(context).size.width - 30,
                   child: FittedBox(
                     fit: _sessionStarted ? BoxFit.none : BoxFit.fitWidth,
-                    child: Text(
-                      _sessionStarted
-                          ? "$_sessionRemainingTime"
-                          : "$_sessionStartRemainingTime",
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontFamily: Constant.DEFAULT_FONT,
-                          color: Colors.white),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: 1, minHeight: 1),
+                      child: Text(
+                        _sessionStarted
+                            ? "$_sessionRemainingTime"
+                            : "$_sessionStartRemainingTime",
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontFamily: Constant.DEFAULT_FONT,
+                            color: Colors.white),
+                      ),
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -132,7 +141,9 @@ class _JoinButtonWidgetState extends State<JoinButtonWidget> {
         if (endTime.difference(startTime).inSeconds < 1) {
           _sessionRemainingTimeTimer.cancel();
           _sessionRemainingTime = "Session has ended";
+          _isEnabled = false;
         } else {
+          _isEnabled = true;
           startTime = startTime.add(Duration(seconds: 1));
           Duration remTime = endTime.difference(startTime);
           String mins = "${remTime.inMinutes.remainder(60).toString()} min" +
@@ -152,7 +163,11 @@ class _JoinButtonWidgetState extends State<JoinButtonWidget> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => AppointmentSession(),
+          builder: (context) => AppointmentSession(
+            appointmentID: widget.appointmentID,
+            endTime: widget.endTime,
+            records: widget.records,
+          ),
         ),
       );
     }

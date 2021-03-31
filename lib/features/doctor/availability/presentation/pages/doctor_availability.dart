@@ -7,6 +7,7 @@ import 'package:elaj/features/doctor/availability/presentation/widgets/expandabl
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import '../../../../../core/ui/overlay_loader.dart' as OverlayLoader;
 import '../../../../../core/ui/loading_widget.dart';
 
@@ -20,6 +21,8 @@ class DoctorAvailability extends StatefulWidget {
 class _DoctorAvailabilityState extends State<DoctorAvailability> {
   AvailabilityBloc _availabilityBloc;
   Availability availability;
+
+  bool _isEditMode = false, _isLoaded = false;
 
   @override
   void initState() {
@@ -36,37 +39,78 @@ class _DoctorAvailabilityState extends State<DoctorAvailability> {
       children: [
         Scaffold(
           appBar: AppBar(
-            automaticallyImplyLeading: true,
+            automaticallyImplyLeading: false,
             backgroundColor: Theme.of(context).primaryColor,
             elevation: 0,
             titleSpacing: 0,
-            title: Row(
+            title: Stack(
               children: <Widget>[
-                Text("Schedule",
-                    style: TextStyle(
-                        fontSize: Constant.TITLE_SIZE,
-                        fontFamily: Constant.DEFAULT_FONT)),
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      InkWell(
-                        borderRadius: BorderRadius.circular(5),
-                        onTap: () {
-                          if (availability != null)
-                            _availabilityBloc.add(FetchAllDataEvent());
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 20),
-                          child: Text("Save",
-                              style: TextStyle(
-                                  fontSize: Constant.TITLE_SIZE - 2,
-                                  fontFamily: Constant.DEFAULT_FONT)),
+                FittedBox(
+                  fit: BoxFit.fitHeight,
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                    color: Colors.transparent,
+                    alignment: Alignment.center,
+                    child: Text("Schedule",
+                        style: TextStyle(
+                            fontSize: Constant.TITLE_SIZE - 2,
+                            fontFamily: Constant.DEFAULT_FONT)),
+                  ),
+                ),
+                _isEditMode
+                    ? Positioned(
+                        top: 0,
+                        bottom: 0,
+                        left: 20,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isEditMode = false;
+                            });
+                          },
+                          child: Container(
+                            alignment: Alignment.center,
+                            child: Text("CANCEL",
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontFamily: Constant.DEFAULT_FONT)),
+                          ),
                         ),
                       )
-                    ],
-                  ),
+                    : Container(),
+                Positioned(
+                  top: 0,
+                  bottom: 0,
+                  right: 20,
+                  child: BlocBuilder(
+                      bloc: _availabilityBloc,
+                      builder: (context, state) {
+                        if (state is Loaded && !_isLoaded) {
+                          _isLoaded = true;
+                        }
+
+                        return _isLoaded
+                            ? GestureDetector(
+                                onTap: () {
+                                  if (_isEditMode) {
+                                    if (availability != null)
+                                      _availabilityBloc
+                                          .add(FetchAllDataEvent());
+                                  } else {
+                                    setState(() {
+                                      _isEditMode = true;
+                                    });
+                                  }
+                                },
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    !_isEditMode ? Icons.edit : Icons.save,
+                                  ),
+                                ),
+                              )
+                            : Container();
+                      }),
                 )
               ],
             ),
@@ -85,18 +129,32 @@ class _DoctorAvailabilityState extends State<DoctorAvailability> {
                             state.msg,
                             style: TextStyle(fontFamily: Constant.DEFAULT_FONT),
                           )));
-                    } else if (state is SlotError) {
-                      Scaffold.of(context).showSnackBar(SnackBar(
-                          duration: Duration(milliseconds: 500),
-                          content: Text(
-                            "Some days have invalid slots due to already present appointments.",
-                            style: TextStyle(fontFamily: Constant.DEFAULT_FONT),
-                          )));
-                    } else if (state is Saved) {
-                      Navigator.of(context).pop();
+                    }
+                    // else if (state is SlotError) {
+                    //   if (state.invalidDays.length > 0) {
+                    //     Scaffold.of(context).showSnackBar(SnackBar(
+                    //         duration: Duration(milliseconds: 500),
+                    //         content: Text(
+                    //           "Some days have invalid slots due to already present appointments.",
+                    //           style:
+                    //               TextStyle(fontFamily: Constant.DEFAULT_FONT),
+                    //         )));
+                    //   }
+                    // }
+                    else if (state is Saved) {
+                      Fluttertoast.showToast(
+                          msg: "Saved Successfully",
+                          toastLength: Toast.LENGTH_SHORT,
+                          backgroundColor: Colors.black.withOpacity(0.6),
+                          textColor: Colors.white,
+                          fontSize: 17);
+
+                      setState(() {
+                        _isEditMode = false;
+                      });
                     }
                   },
-                  child: BlocBuilder<AvailabilityBloc, AvailabilityState>(
+                  child: BlocBuilder(
                     bloc: _availabilityBloc,
                     builder: (context, state) {
                       if (state is Initial && availability == null) {
@@ -107,6 +165,13 @@ class _DoctorAvailabilityState extends State<DoctorAvailability> {
                         );
                       } else if (state is Loaded) {
                         availability = state.availability;
+
+                        // availability.availableDays.forEach((element) {
+                        //   print(element.date);
+                        //   element.slots.forEach((element) {
+                        //     print(element.toJson());
+                        //   });
+                        // });
                       } else if (state is Error) {
                         return Center(
                           child: Column(
@@ -173,12 +238,13 @@ class _DoctorAvailabilityState extends State<DoctorAvailability> {
       behavior: NoGlowScrollBehavior(),
       child: SingleChildScrollView(
         child: Column(
-          children: availability.availableDays
-              .map((day) => ExpandableListWidget(
-                    availabilityBloc: _availabilityBloc,
-                    day: day,
-                  ))
-              .toList(),
+          children: availability.availableDays.map((day) {
+            // print(day.date);
+            return ExpandableListWidget(
+                availabilityBloc: _availabilityBloc,
+                day: day,
+                isEditable: _isEditMode);
+          }).toList(),
         ),
       ),
     );

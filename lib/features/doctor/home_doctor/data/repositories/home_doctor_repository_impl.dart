@@ -27,14 +27,18 @@ class HomeDoctorRepositoryImpl extends HomeDoctorRepository {
             await FirebaseInit.auth.currentUser().then((user) => user.uid);
 
         await FirebaseInit.dbRef
-            .child("doctor/" + uid + "/appointment/" + "current")
+            .child("doctor/$uid/appointment/current")
             .once()
             .then((snapshot) async {
           if (snapshot.value == null) throw NoResultException();
 
           Map<String, BasicAppointment> appointments = Map();
+          List<String> appointmentIDs =
+              Map<String, String>.from(snapshot.value).keys.toList();
 
-          await snapshot.value.forEach((appointmentID, dummyVal) async {
+          for (int i = 0; i < appointmentIDs.length; i++) {
+            String appointmentID = appointmentIDs.elementAt(i);
+
             bool isNew = !cachedBasicAppointments.currentAppointments
                 .containsKey(appointmentID);
             if (isNew) {
@@ -43,17 +47,16 @@ class HomeDoctorRepositoryImpl extends HomeDoctorRepository {
               appointmentMap['id'] = appointmentID;
 
               await FirebaseInit.dbRef
-                  .child("appointment/" + appointmentID + "/basic")
+                  .child("appointment/$appointmentID/basic")
                   .once()
                   .then((appointmentSnapshot) {
                 if (appointmentSnapshot.value == null) throw Exception();
-
                 appointmentMap.addAll(
                     Map<String, dynamic>.from(appointmentSnapshot.value));
               });
 
               await FirebaseInit.dbRef
-                  .child("customer/" + ids[2] + "/details/basic")
+                  .child("customer/${ids[2]}/details/basic")
                   .once()
                   .then((userSnapshot) {
                 if (userSnapshot.value == null) throw Exception();
@@ -65,41 +68,38 @@ class HomeDoctorRepositoryImpl extends HomeDoctorRepository {
               appointments[appointmentID] =
                   BasicAppointment.fromJson(appointmentMap);
             }
-          });
+          }
 
           List<String> toBeDeleted = List();
-          List<String> existingAppointmentIDs =
-              (snapshot.value as Map<String, String>).keys.toList();
 
           cachedBasicAppointments.currentAppointments.addAll(appointments);
 
           cachedBasicAppointments.currentAppointments.keys.forEach((id) {
-            if (existingAppointmentIDs.indexOf(id) == -1) toBeDeleted.add(id);
+            if (appointmentIDs.indexOf(id) == -1) toBeDeleted.add(id);
           });
 
           toBeDeleted.forEach((id) {
             cachedBasicAppointments.currentAppointments.remove(id);
           });
-
-          Map<DateTime, List<BasicAppointment>> appointmentsMap = Map();
-          cachedBasicAppointments.currentAppointments.forEach((key, value) {
-            DateTime thisDate = value.start;
-            thisDate = DateTime(thisDate.year, thisDate.month, thisDate.day);
-
-            if (appointmentsMap.containsKey(thisDate)) {
-              appointmentsMap[thisDate].add(value);
-            } else {
-              appointmentsMap[thisDate] = [value];
-            }
-          });
-
-          return Right(appointmentsMap);
         });
 
-        throw NoResultException();
+        Map<DateTime, List<BasicAppointment>> appointmentsMap = Map();
+        cachedBasicAppointments.currentAppointments.forEach((key, value) {
+          DateTime thisDate = value.start;
+          thisDate = DateTime(thisDate.year, thisDate.month, thisDate.day);
+
+          if (appointmentsMap.containsKey(thisDate)) {
+            appointmentsMap[thisDate].add(value);
+          } else {
+            appointmentsMap[thisDate] = [value];
+          }
+        });
+        
+        return Right(appointmentsMap);
       } on NoResultException {
         return Right({});
       } catch (e) {
+        print(e.toString());
         return Left(DbLoadFailure());
       }
     } else {
@@ -184,6 +184,7 @@ class HomeDoctorRepositoryImpl extends HomeDoctorRepository {
     if (networkInfo.isConnected != null) {
       try {
         await FirebaseInit.auth.signOut();
+        await Future.delayed(Duration(milliseconds: 500));
         return Right(true);
       } catch (e) {
         return Left(AuthFailure());

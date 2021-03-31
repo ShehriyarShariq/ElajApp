@@ -26,29 +26,31 @@ class Availability {
   static List<AvailableDay> _decodeSnapshotList(List jsonList) {
     List<AvailableDay> list = List<AvailableDay>();
     jsonList.forEach((item) {
-      list.add(AvailableDay.fromJson(item));
+      list.add(AvailableDay.fromJson(Map<String, dynamic>.from(item)));
     });
     return list;
   }
 
-  Map<int, Map<int, int>> getAvailableSlots() {
-    Map<int, Map<int, int>> allDaysSlots = Map();
+  Map<String, Map<String, String>> getAvailableSlots() {
+    Map<String, Map<String, String>> allDaysSlots = Map();
     availableDays.forEach((day) {
-      Map<int, int> slots = Map();
-      day.slots.forEach((slot) {
-        DateTime slotPointer = slot.start;
+      Map<String, String> slots = Map();
+      if (day.slots != null) {
+        day.slots.forEach((slot) {
+          DateTime slotPointer = slot.start;
 
-        while (slotPointer.isBefore(slot.end)) {
-          DateTime miniSlotStart = slotPointer;
-          DateTime miniSlotEnd =
-              miniSlotStart.add(Duration(minutes: Constant.SESSION_LENGTH));
+          while (slotPointer.isBefore(slot.end)) {
+            DateTime miniSlotStart = slotPointer;
+            DateTime miniSlotEnd =
+                miniSlotStart.add(Duration(minutes: Constant.SESSION_LENGTH));
 
-          slots[miniSlotStart.millisecondsSinceEpoch] =
-              miniSlotEnd.millisecondsSinceEpoch;
-          slotPointer = miniSlotEnd;
-        }
-      });
-      allDaysSlots[day.date.millisecondsSinceEpoch] = slots;
+            slots[miniSlotStart.millisecondsSinceEpoch.toString()] =
+                miniSlotEnd.millisecondsSinceEpoch.toString();
+            slotPointer = miniSlotEnd;
+          }
+        });
+        allDaysSlots[day.date.millisecondsSinceEpoch.toString()] = slots;
+      }
     });
     return allDaysSlots;
   }
@@ -61,14 +63,14 @@ class AvailableDay {
   AvailableDay({this.date, this.slots});
 
   factory AvailableDay.fromJson(Map<String, dynamic> json) => AvailableDay(
-        date: DateTime.fromMillisecondsSinceEpoch(json['date'], isUtc: true),
+        date: DateTime.fromMillisecondsSinceEpoch(json['date']),
         slots: _decodeSnapshotList(json['slots']).cast<DaySlot>().toList(),
       );
 
   Map<String, dynamic> toJson() {
     return {
       'date': date.millisecondsSinceEpoch,
-      'slots': _encodeSlotsList(slots)
+      'slots': slots != null ? _encodeSlotsList(slots) : null
     };
   }
 
@@ -83,7 +85,7 @@ class AvailableDay {
   static List<DaySlot> _decodeSnapshotList(List jsonList) {
     List<DaySlot> list = List<DaySlot>();
     jsonList.forEach((item) {
-      list.add(DaySlot.fromJson(item));
+      list.add(DaySlot.fromJson(Map<String, num>.from(item)));
     });
     return list;
   }
@@ -95,8 +97,8 @@ class DaySlot {
   DaySlot({this.start, this.end});
 
   factory DaySlot.fromJson(Map<String, num> json) => DaySlot(
-        start: DateTime.fromMillisecondsSinceEpoch(json['start'], isUtc: true),
-        end: DateTime.fromMillisecondsSinceEpoch(json['end'], isUtc: true),
+        start: DateTime.fromMillisecondsSinceEpoch(json['start']),
+        end: DateTime.fromMillisecondsSinceEpoch(json['end']),
       );
 
   Map<String, num> toJson() {

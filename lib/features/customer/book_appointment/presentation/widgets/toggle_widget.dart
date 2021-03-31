@@ -9,9 +9,9 @@ import '../../../../../injection_container.dart';
 
 class ToggleWidget extends StatefulWidget {
   BookAppointmentBloc bookAppointmentBloc;
-  List<String> options;
-  String type, labelText;
-  bool showLabel;
+  final List<String> options;
+  final String type, labelText;
+  final bool showLabel;
 
   ToggleWidget(
       {this.type,
@@ -29,8 +29,9 @@ class _ToggleWidgetState extends State<ToggleWidget> {
 
   @override
   void initState() {
-    if (widget.bookAppointmentBloc == null)
+    if (widget.bookAppointmentBloc == null) {
       widget.bookAppointmentBloc = sl<BookAppointmentBloc>();
+    }
 
     super.initState();
   }
@@ -43,6 +44,7 @@ class _ToggleWidgetState extends State<ToggleWidget> {
       bloc: widget.bookAppointmentBloc,
       listener: (context, state) {
         if (state is FetchingData) {
+          print("WTFFFF");
           widget.bookAppointmentBloc.add(SaveFetchedValueEvent(
               type: widget.type,
               property: widget.type == "otherGender"

@@ -2,7 +2,7 @@ import 'package:elaj/core/util/constants.dart';
 import 'package:equatable/equatable.dart';
 
 class Booking extends Equatable {
-  String categoryID, doctorId, name;
+  String categoryID, doctorId;
   DateTime date, startTime, createdAt;
   num amount;
   bool isSelf;
@@ -22,31 +22,33 @@ class Booking extends Equatable {
         'other': other != null ? other.toJson() : null,
         'isPaid': isPaid,
         'amount': amount
+      },
+      'sessionInfo': {
+        'earlyEndAck': {
+          'doctor': false,
+          'customer': false,
+        }
       }
     };
   }
 
   @override
-  List<Object> get props => [
-        categoryID,
-        doctorId,
-        name,
-        date,
-        startTime,
-        other,
-        isPaid,
-        amount,
-        isSelf
-      ];
+  List<Object> get props =>
+      [categoryID, doctorId, date, startTime, other, isPaid, amount, isSelf];
 
   bool isFullyInitialized() {
     if (isSelf != null) {
       return isSelf
-          ? (name != null ? true : false)
+          ? true
           : (other != null ? other.isFullyInitialized() : false);
     } else {
       return false;
     }
+  }
+
+  void reset() {
+    isSelf = null;
+    other = null;
   }
 }
 

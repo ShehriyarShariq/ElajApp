@@ -32,16 +32,15 @@ class _DoctorPublicProfileState extends State<DoctorPublicProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
-        titleSpacing: 20,
-        title: Center(
-          child: Text("Profile",
+        titleSpacing: 0,
+        title: Text("Profile",
               style: TextStyle(
                   fontSize: Constant.TITLE_SIZE - 2,
                   fontFamily: Constant.DEFAULT_FONT)),
-        ),
+        
       ),
       body: BlocBuilder(
         bloc: _homeDoctorBloc,

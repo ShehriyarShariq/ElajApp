@@ -22,7 +22,7 @@ class AvailabilityRepositoryImpl extends AvailabilityRepository {
         Availability availability = Availability(availableDays: List());
 
         await FirebaseInit.dbRef
-            .child("doctor/" + uid + "/details/workingHours")
+            .child("doctor/$uid/details/workingHours")
             .once()
             .then((snapshot) {
           if (snapshot.value != null)
@@ -53,7 +53,8 @@ class AvailabilityRepositoryImpl extends AvailabilityRepository {
                   List<AvailableDay>.filled(7, null, growable: false));
 
           for (int i = 0; i < availability.availableDays.length; i++) {
-            if (!availability.availableDays[i].date.isBefore(currentDate)) {
+            if (availability.availableDays[i].date.compareTo(currentDate) !=
+                -1) {
               updatedAvailability.availableDays[
                       availability.availableDays[i].date.weekday % 7] =
                   availability.availableDays[i];
@@ -88,30 +89,48 @@ class AvailabilityRepositoryImpl extends AvailabilityRepository {
         String uid =
             await FirebaseInit.auth.currentUser().then((user) => user.uid);
 
-        await FirebaseInit.dbRef
-            .child("doctor/" + uid + "/slots/")
-            .once()
-            .then((slotsSnapShot) async {
-          if (slotsSnapShot.value != null) {
-            Map<int, Map<int, int>> existingSlots =
-                slotsSnapShot.value as Map<int, Map<int, int>>;
-            Map<int, Map<int, int>> newSlots = availability.getAvailableSlots();
+        DateTime currentTime = DateTime.now();
+        await NTP.getNtpOffset().then((int ntpOffset) {
+          currentTime = currentTime.add(Duration(milliseconds: ntpOffset));
+        });
+        DateTime currentDate =
+            DateTime(currentTime.year, currentTime.month, currentTime.day);        
 
-            Map<int, Map<int, int>> updatedSlots = Map();
+        await FirebaseInit.dbRef
+            .child("doctor/$uid/slots/")
+            .once()
+            .then((slotsSnapshot) async {
+          if (slotsSnapshot.value != null) {
+            Map<String, Map<String, String>> existingSlots = new Map();
+            slotsSnapshot.value.forEach((date, slots) {
+              if (DateTime.fromMillisecondsSinceEpoch(int.parse(date))
+                      .compareTo(currentDate) !=
+                  -1) {
+                existingSlots[date.toString()] =
+                    Map<String, String>.from(slots);
+              } else {
+                existingSlots[date.toString()] = null;
+              }
+            });
+            Map<String, Map<String, String>> newSlots =
+                availability.getAvailableSlots();
+
+            // print(newSlots);
+
+            Map<String, Map<String, String>> updatedSlots = Map();
             List<int> invalidDay = List();
 
             newSlots.keys.forEach((date) {
               if (existingSlots.containsKey(date)) {
-                List<int> alreadyUsedMiniSlots = List();
+                List<String> alreadyUsedMiniSlots = List();
                 newSlots[date].keys.forEach((miniSlotStart) {
                   if (!existingSlots[date].containsKey(miniSlotStart)) {
                     alreadyUsedMiniSlots.add(miniSlotStart);
                   }
                 });
 
-                newSlots[date].removeWhere((key, value) {
-                  return !alreadyUsedMiniSlots.contains(key);
-                });
+                newSlots[date].removeWhere(
+                    (key, value) => !alreadyUsedMiniSlots.contains(key));
 
                 if (alreadyUsedMiniSlots.length > 0) {
                   updatedSlots[date] = newSlots[date];
@@ -122,51 +141,56 @@ class AvailabilityRepositoryImpl extends AvailabilityRepository {
             });
 
             existingSlots.keys.forEach((date) {
-              List<int> dateSlots = existingSlots[date].values.toList();
-              if (dateSlots.indexOf(-1) == -1) {
-                if (!newSlots.containsKey(date)) {
-                  updatedSlots[date] = null;
-                }
-              } else {
-                if (newSlots.containsKey(date)) {
-                  int index = dateSlots.indexOf(-1, 0);
-                  while (index != -1) {
-                    newSlots[date][existingSlots[date].keys.toList()[index]] =
-                        dateSlots[index];
-                    index = dateSlots.indexOf(-1, index + 1);
+              if(existingSlots[date] != null) {
+                List<String> dateSlots = existingSlots[date].values.toList();
+                if (dateSlots.indexOf("-1") == -1) {
+                  if (!newSlots.containsKey(date)) {
+                    updatedSlots[date] = null;
                   }
                 } else {
-                  invalidDay.add(
-                      DateTime.fromMillisecondsSinceEpoch(date).weekday % 7);
+                  if (newSlots.containsKey(date)) {
+                    int index = dateSlots.indexOf("-1", 0);
+                    while (index != -1) {
+                      newSlots[date][existingSlots[date].keys.toList()[index]] =
+                          dateSlots[index];
+                      index = dateSlots.indexOf("-1", index + 1);
+                    }
+                  } else {
+                    invalidDay.add(
+                        DateTime.fromMillisecondsSinceEpoch(int.parse(date))
+                                .weekday %
+                            7);
+                  }
                 }
-              }
+              }              
             });
+
+            print(updatedSlots);
+            print(availability.toJson());
 
             if (invalidDay.length > 0) return Right(invalidDay);
 
             await FirebaseInit.dbRef
-                .child("doctor/" + uid + "/details/workingHours")
+                .child("doctor/$uid/details/workingHours")
                 .set(availability.toJson());
 
-            Map<String, dynamic> slotsUpdatesMap = Map();
-            slotsUpdatesMap["/slots/"] = updatedSlots;
-
             await FirebaseInit.dbRef
-                .child("doctor/" + uid)
-                .update(slotsUpdatesMap);
+                .child("doctor/$uid/slots/")
+                .update(updatedSlots);
           } else {
             await FirebaseInit.dbRef
-                .child("doctor/" + uid + "/details/workingHours")
+                .child("doctor/$uid/details/workingHours")
                 .set(availability.toJson());
 
             await FirebaseInit.dbRef
-                .child("doctor/" + uid + "/slots/")
+                .child("doctor/$uid/slots/")
                 .set(availability.getAvailableSlots());
           }
         });
 
         return Right(List());
       } catch (e) {
+        print(e.toString());
         return Left(ProcessFailure());
       }
     } else {

@@ -1,42 +1,33 @@
 {
   "project_info": {
-    "project_number": "930295527002",
-    "firebase_url": "https://elaj-42069.firebaseio.com",
-    "project_id": "elaj-42069",
-    "storage_bucket": "elaj-42069.appspot.com"
+    "project_number": "25545137662",
+    "project_id": "elaj-c5b24",
+    "storage_bucket": "elaj-c5b24.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:930295527002:android:19e90305ae8677ad2aca63",
+        "mobilesdk_app_id": "1:25545137662:android:6bbf7aa562e4debeac74af",
         "android_client_info": {
           "package_name": "com.example.elaj"
         }
       },
       "oauth_client": [
         {
-          "client_id": "930295527002-7ebc2f0k86fig2sttdcpikfpv81l7cgt.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.elaj",
-            "certificate_hash": "d19eb7196661ff340ce0669b57124cea542d2d99"
-          }
-        },
-        {
-          "client_id": "930295527002-2pbc0c7qj7595nt8c356hpbk2cc6562m.apps.googleusercontent.com",
+          "client_id": "25545137662-8c89j613gnm2pqgd3lme1u2aag8febtn.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAREMWKYf0C_G8qQ6XyB3yG4mizpmjikeQ"
+          "current_key": "AIzaSyBOMoHUua7Rzh0IRYo9_c4e-df8iRlDq-I"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "930295527002-2pbc0c7qj7595nt8c356hpbk2cc6562m.apps.googleusercontent.com",
+              "client_id": "25545137662-8c89j613gnm2pqgd3lme1u2aag8febtn.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

@@ -7,4 +7,5 @@ abstract class BookAppointmentRepository {
   Future<Either<Failure, bool>> bookCustomerAppointment(Booking booking);
   Future<Either<Failure, Availability>> getDoctorTimings(String doctorID);
   Future<Either<Failure, bool>> checkPaymentStatus(int startTime);
+  Future<Either<Failure, bool>> checkUser();
 }

@@ -1,10 +1,7 @@
-import 'package:elaj/features/common/splash/presentation/pages/splash.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'core/firebase/firebase.dart';
-import 'features/common/appointment_details/presentation/pages/appointment_details.dart';
-import 'features/common/appointment_session/presentation/pages/appointment_session.dart';
+
+import 'features/common/splash/presentation/pages/splash.dart';
 import 'injection_container.dart' as di;
 
 Future<dynamic> showNotification(Map<String, dynamic> message) async {
@@ -50,9 +47,7 @@ class _MyAppState extends State<MyApp> {
     _localNotificationsPlugin.initialize(new InitializationSettings(
         androidSettings, new IOSInitializationSettings()));
 
-    FirebaseInit.fcm.configure(
-        onMessage: (Map<String, dynamic> message) async {},
-        onBackgroundMessage: showNotification);
+    // Fireb-dMessage: showNotification);
   }
 
   @override
@@ -65,7 +60,7 @@ class _MyAppState extends State<MyApp> {
         accentColor: Colors.white,
         errorColor: Color.fromRGBO(254, 95, 85, 1),
       ),
-      home: SafeArea(child: AppointmentDetails()),
+      home: SafeArea(child: Splash()),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:elaj/core/util/customer_check_singleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -11,11 +12,9 @@ import '../widgets/book_appointment_tab.dart';
 import '../widgets/medical_records_tab.dart';
 
 class CustomerHome extends StatefulWidget {
-  final bool isCustomer;
   final int startFromTab;
 
-  const CustomerHome({Key key, this.isCustomer = false, this.startFromTab = 0})
-      : super(key: key);
+  const CustomerHome({Key key, this.startFromTab = 0}) : super(key: key);
 
   @override
   _CustomerHomeState createState() => _CustomerHomeState();
@@ -26,6 +25,8 @@ class _CustomerHomeState extends State<CustomerHome> {
   int currentTabIndex;
   List<Widget> tabs;
 
+  CustomerCheckSingleton customerCheckSingleton = new CustomerCheckSingleton();
+
   @override
   void initState() {
     _homeCustomerBloc = sl<HomeCustomerBloc>();
@@ -33,7 +34,7 @@ class _CustomerHomeState extends State<CustomerHome> {
     tabs = [
       BookAppointmentTab(
         bloc: _homeCustomerBloc,
-        isCustomer: widget.isCustomer,
+        isCustomer: customerCheckSingleton.isCustLoggedIn,
       ),
       AllAppointments(),
       MedicalRecordsTab()

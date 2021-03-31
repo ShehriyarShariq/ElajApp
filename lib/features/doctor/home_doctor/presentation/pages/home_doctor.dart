@@ -14,13 +14,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../injection_container.dart';
 
 class DoctorHome extends StatefulWidget {
-  int currentTabIndex = 0;
-  List<Widget> tabs = [
-    DoctorAppointments(),
-    DoctorWallet(),
-    DoctorPublicProfile()
-  ];
-
   @override
   _DoctorHomeState createState() => _DoctorHomeState();
 }
@@ -28,6 +21,13 @@ class DoctorHome extends StatefulWidget {
 class _DoctorHomeState extends State<DoctorHome> {
   HomeDoctorBloc _homeDoctorBloc;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  int currentTabIndex = 0;
+  List<Widget> tabs = [
+    DoctorAppointments(),
+    DoctorAvailability(),
+    DoctorWallet()
+  ];
 
   @override
   void initState() {
@@ -44,7 +44,7 @@ class _DoctorHomeState extends State<DoctorHome> {
           children: [
             Expanded(
               child: DefaultTabController(
-                length: widget.tabs.length,
+                length: tabs.length,
                 child: GestureDetector(
                   onTap: () {
                     FocusScope.of(context).requestFocus(FocusNode());
@@ -88,13 +88,13 @@ class _DoctorHomeState extends State<DoctorHome> {
                             title: Row(
                               children: [
                                 Icon(
-                                  Icons.access_time,
+                                  Icons.person,
                                   color: Colors.black.withOpacity(0.6),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.only(left: 10),
                                   child: Text(
-                                    "Availability",
+                                    "My Profile",
                                     style: TextStyle(
                                         fontFamily: Constant.DEFAULT_FONT),
                                   ),
@@ -105,7 +105,7 @@ class _DoctorHomeState extends State<DoctorHome> {
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (_) => DoctorAvailability()));
+                                      builder: (_) => DoctorPublicProfile()));
                             },
                           ),
                           ListTile(
@@ -181,7 +181,7 @@ class _DoctorHomeState extends State<DoctorHome> {
                             ));
                           }
                         },
-                        child: widget.tabs[widget.currentTabIndex]),
+                        child: tabs[currentTabIndex]),
                     bottomNavigationBar: _getNavBar(),
                   ),
                 ),
@@ -212,8 +212,8 @@ class _DoctorHomeState extends State<DoctorHome> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _navItem("Appointment", Icons.book, 0),
-          _navItem("Wallet", Icons.monetization_on, 1),
-          _navItem("Profile", Icons.person, 2),
+          _navItem("Availability", Icons.access_time, 1),
+          _navItem("Wallet", Icons.monetization_on, 2),
         ],
       ),
     );
@@ -223,12 +223,12 @@ class _DoctorHomeState extends State<DoctorHome> {
     return InkWell(
       onTap: () {
         setState(() {
-          widget.currentTabIndex = tabIndex;
+          currentTabIndex = tabIndex;
         });
       },
       child: Container(
         height: 60,
-        width: MediaQuery.of(context).size.width / widget.tabs.length,
+        width: MediaQuery.of(context).size.width / tabs.length,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -237,7 +237,7 @@ class _DoctorHomeState extends State<DoctorHome> {
             Icon(
               tabIcon,
               size: 22,
-              color: widget.currentTabIndex == tabIndex
+              color: currentTabIndex == tabIndex
                   ? Theme.of(context).primaryColor
                   : AppColor.DARK_GRAY,
             ),
@@ -247,7 +247,7 @@ class _DoctorHomeState extends State<DoctorHome> {
             Text(
               tabName,
               style: TextStyle(
-                  color: widget.currentTabIndex == tabIndex
+                  color: currentTabIndex == tabIndex
                       ? Theme.of(context).primaryColor
                       : AppColor.DARK_GRAY,
                   fontFamily: Constant.DEFAULT_FONT),

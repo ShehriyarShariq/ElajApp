@@ -45,43 +45,43 @@ class AppointmentDetailsBloc
   ) async* {
     if (event is LoadAppointmentEvent) {
       yield Loading();
-      // final failureOrAppointment = await getAppointmentDetails(
-      //     AppointmentParams(appointmentID: event.appointmentID));
-      // yield failureOrAppointment.fold((failure) => Error(),
-      //     (appointment) => Loaded(appointment: appointment));
+      final failureOrAppointment = await getAppointmentDetails(
+          AppointmentParams(appointmentID: event.appointmentID));
+      yield failureOrAppointment.fold((failure) => Error(),
+          (appointment) => Loaded(appointment: appointment));
 
-      await Future.delayed(const Duration(seconds: 2));
+      // await Future.delayed(const Duration(seconds: 2));
 
-      Map<String, dynamic> appointmentMap = {
-        'id': 'appointment01',
-        'name': 'Shehriyar Shariq',
-        'photoURL':
-            'https://firebasestorage.googleapis.com/v0/b/elaj-5624b.appspot.com/o/doctor%2FpvmwLXjLX9bCG8KDlkZKXpBxrJu1%2FprofileImg.png?alt=media&token=c4f5a017-5720-4cef-b198-e9990bb59801',
-        'status': 'assigned',
-        'start':
-            DateTime.now().add(Duration(minutes: 1)).millisecondsSinceEpoch,
-        'end': DateTime.now()
-            .add(Duration(
-                minutes: 2)) //days: 1, minutes: Constant.SESSION_LENGTH))
-            .millisecondsSinceEpoch,
-        'createdAt': DateTime.now().millisecondsSinceEpoch,
-        'isPaid': false,
-        'medicalRecords': [
-          MedicalRecord(
-              id: 'medicalRecord01',
-              desc: 'None',
-              date: DateTime.now(),
-              images: {
-                'test':
-                    'https://firebasestorage.googleapis.com/v0/b/elaj-5624b.appspot.com/o/doctor%2FpvmwLXjLX9bCG8KDlkZKXpBxrJu1%2FprofileImg.png?alt=media&token=c4f5a017-5720-4cef-b198-e9990bb59801'
-              })
-        ]
-      };
+      // Map<String, dynamic> appointmentMap = {
+      //   'id': 'appointment01',
+      //   'name': 'Shehriyar Shariq',
+      //   'photoURL':
+      //       'https://firebasestorage.googleapis.com/v0/b/elaj-5624b.appspot.com/o/doctor%2FpvmwLXjLX9bCG8KDlkZKXpBxrJu1%2FprofileImg.png?alt=media&token=c4f5a017-5720-4cef-b198-e9990bb59801',
+      //   'status': 'assigned',
+      //   'start':
+      //       DateTime.now().add(Duration(minutes: 1)).millisecondsSinceEpoch,
+      //   'end': DateTime.now()
+      //       .add(Duration(
+      //           minutes: 2)) //days: 1, minutes: Constant.SESSION_LENGTH))
+      //       .millisecondsSinceEpoch,
+      //   'createdAt': DateTime.now().millisecondsSinceEpoch,
+      //   'isPaid': false,
+      //   'medicalRecords': [
+      //     MedicalRecord(
+      //         id: 'medicalRecord01',
+      //         desc: 'None',
+      //         date: DateTime.now(),
+      //         images: {
+      //           'test':
+      //               'https://firebasestorage.googleapis.com/v0/b/elaj-5624b.appspot.com/o/doctor%2FpvmwLXjLX9bCG8KDlkZKXpBxrJu1%2FprofileImg.png?alt=media&token=c4f5a017-5720-4cef-b198-e9990bb59801'
+      //         })
+      //   ]
+      // };
 
-      BasicAppointment appointment =
-          new BasicAppointment.fromJson(appointmentMap);
+      // BasicAppointment appointment =
+      //     new BasicAppointment.fromJson(appointmentMap);
 
-      yield Loaded(appointment: appointment);
+      // yield Loaded(appointment: appointment);
     } else if (event is JoinSessionEvent) {
       final failureOrResult = await checkJoinSessionStatus(
           AppointmentParams(startTime: event.startTime));

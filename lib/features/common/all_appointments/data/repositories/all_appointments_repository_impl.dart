@@ -3,6 +3,7 @@ import 'package:elaj/core/error/exceptions.dart';
 import 'package:elaj/core/error/failures.dart';
 import 'package:elaj/core/firebase/firebase.dart';
 import 'package:elaj/core/network/network_info.dart';
+import 'package:elaj/core/util/customer_check_singleton.dart';
 import 'package:elaj/features/common/all_appointments/data/datasources/cached_basic_appointments_singleton.dart';
 import 'package:elaj/features/common/all_appointments/domain/entities/basic_appointment.dart';
 import 'package:elaj/features/common/all_appointments/domain/repositories/all_appointments_repository.dart';
@@ -30,8 +31,15 @@ class AllAppointmentsRepositoryImpl extends AllAppointmentsRepository {
       _getEitherCurrentOrPastAppointments(bool current) async {
     if (networkInfo.isConnected != null) {
       try {
+        CustomerCheckSingleton customerCheckSingleton =
+            new CustomerCheckSingleton();
+        if (!customerCheckSingleton.isCustLoggedIn)
+          throw UnauthorizedUserException();
+
         FirebaseUser user = await FirebaseInit.auth.currentUser();
         if (user == null) throw UnauthorizedUserException();
+
+        customerCheckSingleton.isCustLoggedIn = true;
 
         bool isCust = await user
             .getIdToken(refresh: true)
@@ -51,8 +59,12 @@ class AllAppointmentsRepositoryImpl extends AllAppointmentsRepository {
           if (snapshot.value == null) throw NoResultException();
 
           Map<String, BasicAppointment> appointments = Map();
+          List<String> appointmentIDs =
+              Map<String, String>.from(snapshot.value).keys.toList();
 
-          await snapshot.value.forEach((appointmentID, dummyVal) async {
+          for (int i = 0; i < appointmentIDs.length; i++) {
+            String appointmentID = appointmentIDs.elementAt(i);
+
             bool isNew = current
                 ? !cachedBasicAppointments.currentAppointments
                     .containsKey(appointmentID)
@@ -74,8 +86,9 @@ class AllAppointmentsRepositoryImpl extends AllAppointmentsRepository {
               });
 
               await FirebaseInit.dbRef
-                  .child((isCust ? "customer/" + ids[2] : "/doctor/" + ids[1]) +
-                      "/details/basic")
+                  .child(
+                      (!isCust ? "customer/" + ids[2] : "/doctor/" + ids[1]) +
+                          "/details/basic")
                   .once()
                   .then((userSnapshot) {
                 if (userSnapshot.value == null) throw Exception();
@@ -87,17 +100,15 @@ class AllAppointmentsRepositoryImpl extends AllAppointmentsRepository {
               appointments[appointmentID] =
                   BasicAppointment.fromJson(appointmentMap);
             }
-          });
+          }
 
           List<String> toBeDeleted = List();
-          List<String> existingAppointmentIDs =
-              (snapshot.value as Map<String, String>).keys.toList();
 
           if (current) {
             cachedBasicAppointments.currentAppointments.addAll(appointments);
 
             cachedBasicAppointments.currentAppointments.keys.forEach((id) {
-              if (existingAppointmentIDs.indexOf(id) == -1) toBeDeleted.add(id);
+              if (appointmentIDs.indexOf(id) == -1) toBeDeleted.add(id);
             });
 
             toBeDeleted.forEach((id) {
@@ -107,25 +118,24 @@ class AllAppointmentsRepositoryImpl extends AllAppointmentsRepository {
             cachedBasicAppointments.pastAppointments.addAll(appointments);
 
             cachedBasicAppointments.pastAppointments.keys.forEach((id) {
-              if (existingAppointmentIDs.indexOf(id) == -1) toBeDeleted.add(id);
+              if (appointmentIDs.indexOf(id) == -1) toBeDeleted.add(id);
             });
 
             toBeDeleted.forEach((id) {
               cachedBasicAppointments.pastAppointments.remove(id);
             });
           }
-
-          return Right(current
-              ? cachedBasicAppointments.currentAppointments
-              : cachedBasicAppointments.pastAppointments);
         });
 
-        throw NoResultException();
+        return Right(current
+            ? cachedBasicAppointments.currentAppointments.values.toList()
+            : cachedBasicAppointments.pastAppointments.values.toList());
       } on UnauthorizedUserException {
         return Left(UnauthorizedUserFailure());
       } on NoResultException {
         return Right([]);
       } catch (e) {
+        print(e.toString());
         return Left(DbLoadFailure());
       }
     } else {

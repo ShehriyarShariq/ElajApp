@@ -58,6 +58,16 @@ class AppointmentParams extends Equatable {
   List<Object> get props => [appointmentID, startTime];
 }
 
+class AcknowledgementParams extends Equatable {
+  final String appointmentID;
+  final bool isEnd, forCust;
+
+  AcknowledgementParams({this.appointmentID, this.isEnd, this.forCust});
+
+  @override
+  List<Object> get props => [appointmentID, isEnd, forCust];
+}
+
 class AvailabilityParams extends Equatable {
   final Availability availability;
 

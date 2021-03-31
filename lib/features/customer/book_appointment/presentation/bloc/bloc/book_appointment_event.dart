@@ -13,6 +13,8 @@ class GetDoctorTimingsEvent extends BookAppointmentEvent {
   GetDoctorTimingsEvent({this.doctorID}) : super([doctorID]);
 }
 
+class CheckUserEvent extends BookAppointmentEvent {}
+
 class BookCustomerAppointmentEvent extends BookAppointmentEvent {
   final BookingEntity.Booking booking;
 
@@ -25,7 +27,8 @@ class SaveFetchedValueEvent extends BookAppointmentEvent {
   final property;
   final String type;
 
-  SaveFetchedValueEvent({this.property, this.type}) : super([property, type]);
+  SaveFetchedValueEvent({this.property, this.type = ""})
+      : super([property, type]);
 }
 
 class ShowSelfEvent extends BookAppointmentEvent {}
@@ -33,3 +36,5 @@ class ShowSelfEvent extends BookAppointmentEvent {}
 class ShowOtherEvent extends BookAppointmentEvent {}
 
 class Reset extends BookAppointmentEvent {}
+
+class DummyEvent extends BookAppointmentEvent {}

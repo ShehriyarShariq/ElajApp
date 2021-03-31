@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:elaj/core/error/exceptions.dart';
 import 'package:elaj/core/firebase/firebase.dart';
 import 'package:elaj/core/network/network_info.dart';
+import 'package:elaj/core/util/customer_check_singleton.dart';
 import 'package:elaj/features/customer/add_medical_record/domain/entities/medical_record.dart';
 import 'package:elaj/features/customer/home_customer/domain/entities/all_categories_singleton.dart';
 import 'package:elaj/features/customer/home_customer/domain/entities/category.dart';
@@ -54,8 +55,15 @@ class HomeRepositoryImpl extends HomeRepository {
   Future<Either<Failure, List<MedicalRecord>>> getAllMedicalRecords() async {
     if (networkInfo.isConnected != null) {
       try {
+        CustomerCheckSingleton customerCheckSingleton =
+            new CustomerCheckSingleton();
+        if (!customerCheckSingleton.isCustLoggedIn)
+          throw UnauthorizedUserException();
+
         FirebaseUser user = await FirebaseInit.auth.currentUser();
         if (user == null) throw UnauthorizedUserException();
+
+        customerCheckSingleton.isCustLoggedIn = true;
 
         MedicalRecordsSingleton medicalRecordsSingleton =
             new MedicalRecordsSingleton();
@@ -120,6 +128,12 @@ class HomeRepositoryImpl extends HomeRepository {
     if (networkInfo.isConnected != null) {
       try {
         await FirebaseInit.auth.signOut();
+        await Future.delayed(Duration(milliseconds: 500));
+
+        CustomerCheckSingleton customerCheckSingleton =
+            CustomerCheckSingleton();
+        customerCheckSingleton.isCustLoggedIn = false;
+
         return Right(true);
       } catch (e) {
         return Left(AuthFailure());

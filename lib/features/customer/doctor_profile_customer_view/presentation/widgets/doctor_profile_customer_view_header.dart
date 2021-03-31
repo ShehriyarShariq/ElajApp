@@ -119,7 +119,7 @@ class DoctorProfileCustomerViewHeader extends StatelessWidget {
                         text: doctor.expYears.toString() + " Year(s) ",
                         style: TextStyle(
                             fontSize: 15,
-                            fontFamily: "Robotto",
+                            fontFamily: "Roboto",
                             color: Colors.black,
                             fontWeight: FontWeight.bold),
                         children: <TextSpan>[

@@ -85,17 +85,17 @@ class CredentialsRepositoryImpl extends CredentialsRepository {
             email: userCred.email, password: userCred.password);
         FirebaseUser user = result.user;
 
-        bool isCust;
+        bool isCust = true;
 
-        await user.getIdToken(refresh: true).then((idToken) {
-          print(idToken.claims);
-          if (idToken.claims.containsKey('customer')) {
-            isCust = true;
-          } else if (idToken.claims.containsKey('doctor')) {
-            isCust = false;
-          }
-        });
-        if (isCust == null) throw Exception();
+        // await user.getIdToken(refresh: true).then((idToken) {
+        //   print(idToken.claims);
+        //   if (idToken.claims.containsKey('customer')) {
+        //     isCust = true;
+        //   } else if (idToken.claims.containsKey('doctor')) {
+        //     isCust = false;
+        //   }
+        // });
+        // if (isCust == null) throw Exception();
 
         Map<String, bool> map = Map();
         if (!isCust) {

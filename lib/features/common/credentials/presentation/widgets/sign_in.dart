@@ -21,7 +21,7 @@ class SignInBodyWidget extends StatefulWidget {
 class _SignInBodyWidgetState extends State<SignInBodyWidget> {
   TextEditingController emailInput = TextEditingController(),
       passInput = TextEditingController();
-  bool _hidePass = true;
+  bool _isEnabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -80,21 +80,48 @@ class _SignInBodyWidgetState extends State<SignInBodyWidget> {
                   child: Container(
                     alignment: Alignment.center,
                     height: 50,
-                    child: Text(
-                      'SIGN IN',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontFamily: Constant.DEFAULT_FONT),
+                    child: BlocBuilder(
+                      bloc: widget.bloc,
+                      builder: (context, state) {
+                        if (state is Fetching || state is Success) {
+                          _isEnabled = false;
+
+                          return FittedBox(
+                            fit: BoxFit.fitHeight,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              child: CircularProgressIndicator(
+                                backgroundColor: Colors.transparent,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          );
+                        }
+
+                        _isEnabled = true;
+
+                        return Text(
+                          'SIGN IN',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontFamily: Constant.DEFAULT_FONT),
+                        );
+                      },
                     ),
                   ),
                   onPressed: () {
-                    UserCredSingleton userCredSingleton = UserCredSingleton();
-                    userCredSingleton.userCred.reset();
+                    if (_isEnabled) {
+                      UserCredSingleton userCredSingleton = UserCredSingleton();
+                      userCredSingleton.userCred.reset();
 
-                    widget.bloc.add(SaveFetchedValueEvent(
-                        type: "isSignIn", property: true));
-                    widget.bloc.add(FetchAllDataEvent());
+                      widget.bloc.add(SaveFetchedValueEvent(
+                          type: "isSignIn", property: true));
+                      widget.bloc.add(FetchAllDataEvent());
+                    }
                   }),
               SizedBox(height: MediaQuery.of(context).size.height * 0.063),
               Row(

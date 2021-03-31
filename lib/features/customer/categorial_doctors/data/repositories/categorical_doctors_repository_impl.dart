@@ -36,6 +36,7 @@ class CategoricalDoctorsRepositoryImpl extends CategoricalDoctorsRepository {
             if (doctorID != lastFetchedDoctorID) {
               BasicDoctor doctor = BasicDoctor.empty();
               doctor.id = doctorID;
+              doctor.categoryId = categoryID;
               doctor.photoURL = await FirebaseInit.storageRef
                   .child("doctor/" + doctorID + "/profileImg.png")
                   .getDownloadURL();

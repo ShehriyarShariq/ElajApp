@@ -1,4 +1,8 @@
 import 'package:data_connection_checker/data_connection_checker.dart';
+import 'package:elaj/features/common/appointment_session/domain/usecases/acknowledge_early_end.dart';
+import 'package:elaj/features/common/appointment_session/domain/usecases/give_appointment_rating.dart';
+import 'package:elaj/features/common/appointment_session/domain/usecases/give_prescription.dart';
+import 'package:elaj/features/customer/book_appointment/domain/usecases/check_user.dart';
 import 'package:get_it/get_it.dart';
 
 import 'core/network/network_info.dart';
@@ -18,6 +22,9 @@ import 'features/common/appointment_details/domain/usecases/check_cancellation_s
 import 'features/common/appointment_details/domain/usecases/check_join_session_status.dart';
 import 'features/common/appointment_details/domain/usecases/get_appointment_details.dart';
 import 'features/common/appointment_details/presentation/bloc/bloc/appointment_details_bloc.dart';
+import 'features/common/appointment_session/data/repositories/appointment_session_repository_impl.dart';
+import 'features/common/appointment_session/domain/repositories/appointment_session_repository.dart';
+import 'features/common/appointment_session/presentation/bloc/bloc/appointment_session_bloc.dart';
 import 'features/common/credentials/data/repositories/credentials_repository_impl.dart';
 import 'features/common/credentials/domain/repositories/credentials_repository.dart';
 import 'features/common/credentials/domain/usecases/sign_in_with_credentials.dart';
@@ -130,6 +137,22 @@ Future<void> init() async {
   sl.registerLazySingleton<AppointmentDetailsRepository>(
       () => AppointmentDetailsRepositoryImpl(networkInfo: sl()));
 
+  //! Features - Customer - Appointment Session
+  // Bloc
+  sl.registerFactory(
+    () => AppointmentSessionBloc(
+        appointmentRating: sl(), prescription: sl(), earlyEnd: sl()),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => GiveAppointmentRating(sl()));
+  sl.registerLazySingleton(() => GivePrescription(sl()));
+  sl.registerLazySingleton(() => AcknowledgeEarlyEnd(sl()));
+
+  // Repository
+  sl.registerLazySingleton<AppointmentSessionRepository>(
+      () => AppointmentSessionRepositoryImpl(networkInfo: sl()));
+
   //! Features - Customer - Doctor Profile Customer View
   // Bloc
   sl.registerFactory(() =>
@@ -146,12 +169,16 @@ Future<void> init() async {
   //! Features - Customer - Book Appointment
   // Bloc
   sl.registerFactory(() => BookAppointmentBloc(
-      doctorTimings: sl(), customerAppointment: sl(), paymentStatus: sl()));
+      doctorTimings: sl(),
+      customerAppointment: sl(),
+      paymentStatus: sl(),
+      user: sl()));
 
   // Use Cases
   sl.registerLazySingleton(() => GetDoctorTimings(sl()));
   sl.registerLazySingleton(() => BookCustomerAppointment(sl()));
   sl.registerLazySingleton(() => CheckPaymentStatus(sl()));
+  sl.registerLazySingleton(() => CheckUser(sl()));
 
   // Repository
   sl.registerLazySingleton<BookAppointmentRepository>(

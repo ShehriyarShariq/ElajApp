@@ -26,18 +26,18 @@ class BasicAppointment extends Equatable {
       BasicAppointment(
           id: json['id'],
           name: json['name'],
-          photoURL: json['photoURL'],
+          photoURL: json['picture'],
           status: json['status'],
           gender: json['gender'],
           start: DateTime.fromMillisecondsSinceEpoch(json['start']),
           end: DateTime.fromMillisecondsSinceEpoch(json['end']),
           createdAt: DateTime.fromMillisecondsSinceEpoch(json['createdAt']),
-          isPaid: json['isPaid'],
+          isPaid: json['isPaid'] == null ? false : json['isPaid'],
           other:
               json.containsKey('other') ? Other.fromJson(json['other']) : null,
           medicalRecords: json.containsKey('medicalRecords')
               ? json['medicalRecords'].cast<MedicalRecord>().toList()
-              : null);
+              : []);
 
   @override
   List<Object> get props => [

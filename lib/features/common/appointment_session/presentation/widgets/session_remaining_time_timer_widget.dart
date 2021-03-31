@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:elaj/core/util/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:ntp/ntp.dart';
+import 'package:intl/intl.dart';
 
 class SessionRemainingTimeTimerWidget extends StatefulWidget {
   final DateTime endTime;
@@ -18,7 +19,7 @@ class SessionRemainingTimeTimerWidget extends StatefulWidget {
 class _SessionRemainingTimeTimerWidgetState
     extends State<SessionRemainingTimeTimerWidget> {
   Timer _sessionRemainingTimeTimer;
-  String _sessionRemainingTime = "";
+  String _sessionRemainingTime = "--";
 
   @override
   void initState() {
@@ -37,19 +38,18 @@ class _SessionRemainingTimeTimerWidgetState
   @override
   Widget build(BuildContext context) {
     return Container(
+      alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(vertical: 7.5),
       width: MediaQuery.of(context).size.width * 0.25,
       decoration: BoxDecoration(
           color: Colors.black.withOpacity(0.7),
           borderRadius: BorderRadius.circular(5)),
-      child: FittedBox(
-        fit: BoxFit.fitWidth,
-        child: Text(
-          _sessionRemainingTime,
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: Constant.DEFAULT_FONT,
-          ),
+      child: Text(
+        _sessionRemainingTime,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontFamily: Constant.DEFAULT_FONT,
         ),
       ),
     );
@@ -71,9 +71,8 @@ class _SessionRemainingTimeTimerWidgetState
         } else {
           startTime = startTime.add(Duration(seconds: 1));
           Duration remTime = endTime.difference(startTime);
-          String mins = "${remTime.inMinutes.remainder(60).toString()}";
-          String secs = "${remTime.inSeconds.remainder(60).toString()}";
-          _sessionRemainingTime = "$mins:$secs";
+          _sessionRemainingTime =
+              "${remTime.inMinutes.remainder(60)}:${remTime.inSeconds.remainder(60)}";
         }
       });
     });

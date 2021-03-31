@@ -12,4 +12,9 @@ class AvailabilitySingleton {
   }
 
   Availability availability;
+
+  void reset() {
+    availability = Availability(
+        availableDays: List<AvailableDay>.filled(7, null, growable: false));
+  }
 }

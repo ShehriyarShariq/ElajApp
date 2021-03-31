@@ -1,3 +1,4 @@
+import 'package:elaj/features/common/appointment_details/presentation/pages/appointment_details.dart';
 import 'package:intl/intl.dart';
 import 'package:elaj/core/util/colors.dart';
 import 'package:elaj/core/util/constants.dart';
@@ -25,7 +26,11 @@ class DoctorAppointmentsListItem extends StatelessWidget {
     return appointment == null
         ? _getLoadView(context)
         : GestureDetector(
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) =>
+                      AppointmentDetails(appointmentID: appointment.id)));
+            },
             child: Container(
               margin: const EdgeInsets.fromLTRB(0, 4, 0, 4),
               padding: const EdgeInsets.fromLTRB(10, 2, 5, 10),
@@ -77,23 +82,23 @@ class DoctorAppointmentsListItem extends StatelessWidget {
                                     child: Text(
                                       "Hamza Iqbal",
                                       style: TextStyle(
-                                          fontFamily: "Robotto",
+                                          fontFamily: "Roboto",
                                           fontWeight: FontWeight.bold,
                                           fontSize: 17),
                                     ),
                                   ),
-                                  CircleAvatar(
-                                      radius: 13,
-                                      backgroundColor: appointment.isPaid
-                                          ? Colors.green
-                                          : Colors.redAccent,
-                                      foregroundColor: Colors.white,
-                                      child: Icon(
-                                        appointment.isPaid
-                                            ? Icons.check
-                                            : Icons.money_off,
-                                        size: 16,
-                                      )),
+                                  // CircleAvatar(
+                                  //     radius: 13,
+                                  //     backgroundColor: appointment.isPaid
+                                  //         ? Colors.green
+                                  //         : Colors.redAccent,
+                                  //     foregroundColor: Colors.white,
+                                  //     child: Icon(
+                                  //       appointment.isPaid
+                                  //           ? Icons.check
+                                  //           : Icons.money_off,
+                                  //       size: 16,
+                                  //     )),
                                 ],
                               ),
                               Padding(

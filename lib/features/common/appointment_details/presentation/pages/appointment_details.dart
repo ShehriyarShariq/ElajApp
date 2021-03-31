@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:elaj/core/util/colors.dart';
 import 'package:elaj/features/common/appointment_details/presentation/widgets/join_button_widget.dart';
 import 'package:elaj/features/common/appointment_details/presentation/widgets/pay_button_widget.dart';
+import 'package:elaj/features/customer/home_customer/presentation/widgets/medical_records_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -28,6 +29,8 @@ class AppointmentDetails extends StatefulWidget {
 class _AppointmentDetailsState extends State<AppointmentDetails> {
   AppointmentDetailsBloc _appointmentDetailsBloc;
   BasicAppointment appointment;
+  bool _isMedicalRecordsVisible = false;
+  Timer _medicalRecordsAllowedVisibilityTimeTimer;
 
   @override
   void initState() {
@@ -36,6 +39,14 @@ class _AppointmentDetailsState extends State<AppointmentDetails> {
 
     _appointmentDetailsBloc
         .add(LoadAppointmentEvent(appointmentID: widget.appointmentID));
+  }
+
+  @override
+  void dispose() {
+    if (_medicalRecordsAllowedVisibilityTimeTimer != null)
+      _medicalRecordsAllowedVisibilityTimeTimer.cancel();
+
+    super.dispose();
   }
 
   @override
@@ -128,49 +139,55 @@ class _AppointmentDetailsState extends State<AppointmentDetails> {
                         return Expanded(
                             child: Container(child: LoadingWidget()));
                       } else if (state is Error) {
-                        return Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Text(
-                              "Some error occurred!",
-                              style: TextStyle(
-                                  color: AppColor.DARK_GRAY,
-                                  fontSize: 22,
-                                  fontFamily: Constant.DEFAULT_FONT),
-                            ),
-                            SizedBox(
-                              height: 20,
-                            ),
-                            FlatButton(
-                              color: Theme.of(context)
-                                  .primaryColor
-                                  .withOpacity(0.8),
-                              onPressed: () {
-                                _appointmentDetailsBloc.add(
-                                    LoadAppointmentEvent(
-                                        appointmentID: widget.appointmentID));
-                              },
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5)),
-                              child: Padding(
-                                padding: const EdgeInsets.all(15),
-                                child: Text(
-                                  "Try Again",
+                        return Expanded(
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Text(
+                                  "Some error occurred!",
                                   style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
+                                      color: AppColor.DARK_GRAY,
+                                      fontSize: 22,
                                       fontFamily: Constant.DEFAULT_FONT),
                                 ),
-                              ),
-                            )
-                          ],
+                                SizedBox(
+                                  height: 20,
+                                ),
+                                FlatButton(
+                                  color: Theme.of(context)
+                                      .primaryColor
+                                      .withOpacity(0.8),
+                                  onPressed: () {
+                                    _appointmentDetailsBloc.add(
+                                        LoadAppointmentEvent(
+                                            appointmentID:
+                                                widget.appointmentID));
+                                  },
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(5)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(15),
+                                    child: Text(
+                                      "Try Again",
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontFamily: Constant.DEFAULT_FONT),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
                         );
                       } else if (state is Loaded) {
                         appointment = state.appointment;
                       }
 
-                      return _buildBody();
+                      return _buildBody(context);
                     }),
               ],
             ),
@@ -190,7 +207,10 @@ class _AppointmentDetailsState extends State<AppointmentDetails> {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(context) {
+    if (_medicalRecordsAllowedVisibilityTimeTimer == null)
+      _startMedicalRecordsAllowedVisibilityTimeTimer(context);
+
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -439,7 +459,7 @@ class _AppointmentDetailsState extends State<AppointmentDetails> {
                           ],
                         ),
                       ),
-                      appointment.gender == null
+                      appointment.gender != null
                           ? Padding(
                               padding: const EdgeInsets.only(top: 30),
                               child: Column(
@@ -449,7 +469,7 @@ class _AppointmentDetailsState extends State<AppointmentDetails> {
                                     "Note:",
                                     style: TextStyle(
                                         fontFamily: Constant.DEFAULT_FONT,
-                                        color: AppColor.DARK_GRAY,
+                                        color: Colors.black.withOpacity(0.7),
                                         fontSize: 17),
                                   ),
                                   Padding(
@@ -466,7 +486,50 @@ class _AppointmentDetailsState extends State<AppointmentDetails> {
                                 ],
                               ),
                             )
-                          : Container()
+                          : _isMedicalRecordsVisible
+                              ? Padding(
+                                  padding: const EdgeInsets.only(top: 30),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Medical Records:",
+                                        style: TextStyle(
+                                          fontFamily: Constant.DEFAULT_FONT,
+                                          color: Colors.black.withOpacity(0.7),
+                                          fontSize: 17,
+                                        ),
+                                      ),
+                                      Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 10),
+                                          child: appointment
+                                                      .medicalRecords.length ==
+                                                  0
+                                              ? Text(
+                                                  "No Medical Records Available",
+                                                  style: TextStyle(
+                                                      height: 1.5,
+                                                      fontFamily:
+                                                          Constant.DEFAULT_FONT,
+                                                      color: AppColor.DARK_GRAY,
+                                                      fontSize: 16),
+                                                )
+                                              : Column(
+                                                  children: appointment
+                                                      .medicalRecords
+                                                      .map((record) =>
+                                                          MedicalRecordsListItem(
+                                                            record,
+                                                            canEdit: false,
+                                                          ))
+                                                      .toList(),
+                                                )),
+                                    ],
+                                  ),
+                                )
+                              : Container()
                     ],
                   ),
                 ),
@@ -484,9 +547,10 @@ class _AppointmentDetailsState extends State<AppointmentDetails> {
                           createdAt: appointment.createdAt,
                         )
                       : JoinButtonWidget(
+                          appointmentID: widget.appointmentID,
                           startTime: appointment.start,
                           endTime: appointment.end,
-                        )
+                          records: appointment.medicalRecords)
                 ],
               ),
             ),
@@ -571,5 +635,26 @@ class _AppointmentDetailsState extends State<AppointmentDetails> {
             ],
           );
         });
+  }
+
+  Future<void> _startMedicalRecordsAllowedVisibilityTimeTimer(context) async {
+    const oneSec = const Duration(seconds: 1);
+    DateTime startTime = DateTime.now();
+    await NTP.getNtpOffset().then((int ntpOffset) {
+      startTime = startTime.add(Duration(milliseconds: ntpOffset));
+    });
+    DateTime endTime = appointment.start.subtract(Duration(minutes: 15));
+
+    _medicalRecordsAllowedVisibilityTimeTimer =
+        new Timer.periodic(oneSec, (timer) {
+      if (endTime.difference(startTime).inSeconds < 1) {
+        _medicalRecordsAllowedVisibilityTimeTimer.cancel();
+        setState(() {
+          _isMedicalRecordsVisible = true;
+        });
+      } else {
+        startTime = startTime.add(Duration(seconds: 1));
+      }
+    });
   }
 }

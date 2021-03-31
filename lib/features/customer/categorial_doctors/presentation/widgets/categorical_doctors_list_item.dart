@@ -65,7 +65,7 @@ class CategoricalDoctorListItem extends StatelessWidget {
     //                         child: Text(
     //                           "Dr. Hamza Iqbal",
     //                           style: TextStyle(
-    //                               fontFamily: "Robotto",
+    //                               fontFamily: "Roboto",
     //                               fontWeight: FontWeight.bold,
     //                               fontSize: 17),
     //                         ),
@@ -82,7 +82,7 @@ class CategoricalDoctorListItem extends StatelessWidget {
     //                           text: "For: ",
     //                           style: TextStyle(
     //                               fontSize: 14,
-    //                               fontFamily: "Robotto",
+    //                               fontFamily: "Roboto",
     //                               color: Colors.black,
     //                               fontWeight: FontWeight.bold),
     //                           children: <TextSpan>[
@@ -112,7 +112,7 @@ class CategoricalDoctorListItem extends StatelessWidget {
     //                                       text: "Name: ",
     //                                       style: TextStyle(
     //                                           fontSize: 14,
-    //                                           fontFamily: "Robotto",
+    //                                           fontFamily: "Roboto",
     //                                           color: Colors.black,
     //                                           fontWeight: FontWeight.bold),
     //                                       children: <TextSpan>[
@@ -139,7 +139,7 @@ class CategoricalDoctorListItem extends StatelessWidget {
     //                                       text: "Relation: ",
     //                                       style: TextStyle(
     //                                           fontSize: 14,
-    //                                           fontFamily: "Robotto",
+    //                                           fontFamily: "Roboto",
     //                                           color: Colors.black,
     //                                           fontWeight: FontWeight.bold),
     //                                       children: <TextSpan>[
@@ -175,7 +175,7 @@ class CategoricalDoctorListItem extends StatelessWidget {
     //                                 text: "Start: ",
     //                                 style: TextStyle(
     //                                     fontSize: 14,
-    //                                     fontFamily: "Robotto",
+    //                                     fontFamily: "Roboto",
     //                                     color: Colors.black,
     //                                     fontWeight: FontWeight.bold),
     //                                 children: <TextSpan>[
@@ -199,7 +199,7 @@ class CategoricalDoctorListItem extends StatelessWidget {
     //                                 text: "End: ",
     //                                 style: TextStyle(
     //                                     fontSize: 14,
-    //                                     fontFamily: "Robotto",
+    //                                     fontFamily: "Roboto",
     //                                     color: Colors.black,
     //                                     fontWeight: FontWeight.bold),
     //                                 children: <TextSpan>[
@@ -492,7 +492,7 @@ class CategoricalDoctorListItem extends StatelessWidget {
                                 text: doctor.expYears.toString() + " Year(s) ",
                                 style: TextStyle(
                                     fontSize: 15,
-                                    fontFamily: "Robotto",
+                                    fontFamily: "Roboto",
                                     color: Colors.black,
                                     fontWeight: FontWeight.bold),
                                 children: <TextSpan>[

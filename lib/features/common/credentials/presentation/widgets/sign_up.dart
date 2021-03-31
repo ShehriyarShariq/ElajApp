@@ -23,7 +23,7 @@ class _SignUpBodyWidgetState extends State<SignUpBodyWidget> {
   TextEditingController emailInput = TextEditingController(),
       passInput = TextEditingController(),
       confirmPassInp = TextEditingController();
-  bool _hidePass = true, _agreedToTerms = false;
+  bool _isEnabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -124,21 +124,49 @@ class _SignUpBodyWidgetState extends State<SignUpBodyWidget> {
                       child: Container(
                           alignment: Alignment.center,
                           height: 50,
-                          child: Text(
-                            'CREATE ACCOUNT',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontFamily: Constant.DEFAULT_FONT),
+                          child: BlocBuilder(
+                            bloc: widget.bloc,
+                            builder: (context, state) {
+                              if (state is Fetching || state is Success) {
+                                _isEnabled = false;
+
+                                return FittedBox(
+                                  fit: BoxFit.fitHeight,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 20),
+                                    child: CircularProgressIndicator(
+                                      backgroundColor: Colors.transparent,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              _isEnabled = true;
+
+                              return Text(
+                                'CREATE ACCOUNT',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontFamily: Constant.DEFAULT_FONT),
+                              );
+                            },
                           )),
                       onPressed: () {
-                        UserCredSingleton userCredSingleton =
-                            UserCredSingleton();
-                        userCredSingleton.userCred.reset();
+                        if (_isEnabled) {
+                          UserCredSingleton userCredSingleton =
+                              UserCredSingleton();
+                          userCredSingleton.userCred.reset();
 
-                        widget.bloc.add(SaveFetchedValueEvent(
-                            type: "isSignIn", property: false));
-                        widget.bloc.add(FetchAllDataEvent());
+                          widget.bloc.add(SaveFetchedValueEvent(
+                              type: "isSignIn", property: false));
+                          widget.bloc.add(FetchAllDataEvent());
+                        }
                       }),
                   SizedBox(height: 30),
                   Row(
@@ -164,7 +192,8 @@ class _SignUpBodyWidgetState extends State<SignUpBodyWidget> {
                         ),
                       )
                     ],
-                  )
+                  ),
+                  SizedBox(height: 30),
                 ],
               ),
             ),

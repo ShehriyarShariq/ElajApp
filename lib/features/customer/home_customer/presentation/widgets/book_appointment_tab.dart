@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:elaj/core/ui/overlay_loader.dart' as OverlayLoader;
 
 import '../../../../../injection_container.dart';
 import 'medical_records_tab.dart';
@@ -53,297 +54,326 @@ class _BookAppointmentTabState extends State<BookAppointmentTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        backgroundColor: Theme.of(context).primaryColor,
-        elevation: 0,
-        titleSpacing: 0,
-        title: LayoutBuilder(builder: (context, constraint) {
-          return SizedBox(
-            height: 20,
-            child: Stack(
-              children: [
-                Positioned(
-                  top: 0,
-                  bottom: 0,
-                  right: MediaQuery.of(context).size.width * 0.46,
-                  child: Text("Elaj",
-                      style: TextStyle(
-                          fontSize: Constant.TITLE_SIZE,
-                          fontFamily: Constant.DEFAULT_FONT)),
-                ),
-              ],
-            ),
-          );
-        }),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+    return Stack(
+      children: [
+        Column(
           children: [
-            DrawerHeader(
-              child: Container(),
-              decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-            ),
-            !widget.isCustomer
-                ? ListTile(
-                    title: Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          color: Colors.black.withOpacity(0.6),
+            Expanded(
+              child: Scaffold(
+                key: _scaffoldKey,
+                appBar: AppBar(
+                  automaticallyImplyLeading: true,
+                  backgroundColor: Theme.of(context).primaryColor,
+                  elevation: 0,
+                  titleSpacing: 0,
+                  centerTitle: true,
+                  title: Text(
+                    "Elaj",
+                    style: TextStyle(
+                        fontSize: Constant.TITLE_SIZE,
+                        fontFamily: Constant.DEFAULT_FONT),
+                  ),
+                ),
+                drawer: Drawer(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      DrawerHeader(
+                        child: Container(),
+                        decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor),
+                      ),
+                      !widget.isCustomer
+                          ? ListTile(
+                              title: Row(
+                                children: [
+                                  Icon(
+                                    Icons.access_time,
+                                    color: Colors.black.withOpacity(0.6),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 10),
+                                    child: Text(
+                                      "Log In",
+                                      style: TextStyle(
+                                          fontFamily: Constant.DEFAULT_FONT),
+                                    ),
+                                  )
+                                ],
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) => Credentials(
+                                              isFromCustHome: true,
+                                            )));
+                              },
+                            )
+                          : Column(
+                              children: [
+                                ListTile(
+                                  title: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.feedback,
+                                        color: Colors.black.withOpacity(0.6),
+                                      ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 10),
+                                        child: Text(
+                                          "App Feedback",
+                                          style: TextStyle(
+                                              fontFamily:
+                                                  Constant.DEFAULT_FONT),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (_) => AppFeedback()));
+                                  },
+                                ),
+                                Divider(
+                                  height: 1,
+                                  color: AppColor.DARK_GRAY,
+                                ),
+                                ListTile(
+                                  title: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.exit_to_app,
+                                        color: Theme.of(context).primaryColor,
+                                      ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 10),
+                                        child: Text(
+                                          "Log Out",
+                                          style: TextStyle(
+                                              fontFamily: Constant.DEFAULT_FONT,
+                                              color: Theme.of(context)
+                                                  .primaryColor),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    _homeCustomerBloc.add(LogOutEvent());
+                                  },
+                                )
+                              ],
+                            )
+                    ],
+                  ),
+                ),
+                body: BlocListener(
+                  bloc: _homeCustomerBloc,
+                  listener: (context, state) {
+                    print(state);
+                    if (state is LogOut) {
+                      Navigator.of(context).pop();
+
+                      Navigator.pushReplacement(
+                          context, MaterialPageRoute(builder: (_) => Splash()));
+                    } else if (state is LogOutError) {
+                      Navigator.of(context).pop();
+
+                      Scaffold.of(context).showSnackBar(SnackBar(
+                        duration: Duration(milliseconds: 500),
+                        content: Text(
+                          "Logout Failed!",
+                          style: TextStyle(fontFamily: Constant.DEFAULT_FONT),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Text(
-                            "Log In",
-                            style: TextStyle(fontFamily: Constant.DEFAULT_FONT),
+                      ));
+                    }
+                  },
+                  child: Container(
+                    color: AppColor.GRAY,
+                    child: Column(
+                      children: [
+                        Container(
+                          height: MediaQuery.of(context).size.height * 0.18,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).accentColor,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.5),
+                                spreadRadius: 2,
+                                blurRadius: 3,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
                           ),
-                        )
+                          padding: EdgeInsets.only(left: 15, right: 15),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.072,
+                                margin: const EdgeInsets.only(top: 1),
+                                decoration: BoxDecoration(
+                                  border: Border.all(width: 0.2),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 15,
+                                    ),
+                                    Icon(
+                                      Icons.search,
+                                      color: AppColor.DARK_GRAY,
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _searchController,
+                                        decoration: InputDecoration(
+                                          hintText: "Search for 'Category'",
+                                          enabledBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.transparent,
+                                                  width: 0)),
+                                          focusedBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.transparent,
+                                                  width: 0)),
+                                        ),
+                                        style: TextStyle(
+                                            fontFamily: Constant.DEFAULT_FONT,
+                                            fontSize: 18),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        BlocBuilder<HomeCustomerBloc, HomeCustomerState>(
+                          bloc: _homeCustomerBloc,
+                          builder: (context, state) {
+                            if (state is LoadingCategories) {
+                              isLoaded = false;
+                            } else if (state is ErrorCategories) {
+                              return Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Text(
+                                      "Some error occurred!",
+                                      style: TextStyle(
+                                          color: AppColor.DARK_GRAY,
+                                          fontSize: 22,
+                                          fontFamily: Constant.DEFAULT_FONT),
+                                    ),
+                                    SizedBox(
+                                      height: 20,
+                                    ),
+                                    FlatButton(
+                                      color: Theme.of(context)
+                                          .primaryColor
+                                          .withOpacity(0.8),
+                                      onPressed: () {
+                                        _homeCustomerBloc
+                                            .add(GetAllCategoriesEvent());
+                                      },
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(5)),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(15),
+                                        child: Text(
+                                          "Try Again",
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontFamily:
+                                                  Constant.DEFAULT_FONT),
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              );
+                            } else if (state is LoadedCategories) {
+                              allCategories = state.categories;
+                              currentCategoies = state.categories;
+                              isLoaded = true;
+
+                              if (currentCategoies.length == 0) {
+                                return Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Text(
+                                        "0 Categories Found",
+                                        style: TextStyle(
+                                            fontSize: 22,
+                                            fontFamily: Constant.DEFAULT_FONT,
+                                            color:
+                                                Colors.black.withOpacity(0.6)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            } else if (state is SearchedCategories) {
+                              currentCategoies = state.queriedCategories;
+                              isLoaded = true;
+
+                              if (currentCategoies.length == 0) {
+                                return Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Text(
+                                        "0 Categories Found",
+                                        style: TextStyle(
+                                            fontSize: 22,
+                                            fontFamily: Constant.DEFAULT_FONT,
+                                            color:
+                                                Colors.black.withOpacity(0.6)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            }
+
+                            return _buildBody();
+                          },
+                        ),
                       ],
                     ),
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => Credentials(
-                                    isFromCustHome: true,
-                                  )));
-                    },
-                  )
-                : Column(
-                    children: [
-                      ListTile(
-                        title: Row(
-                          children: [
-                            Icon(
-                              Icons.feedback,
-                              color: Colors.black.withOpacity(0.6),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(
-                                "App Feedback",
-                                style: TextStyle(
-                                    fontFamily: Constant.DEFAULT_FONT),
-                              ),
-                            )
-                          ],
-                        ),
-                        onTap: () {
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (_) => AppFeedback()));
-                        },
-                      ),
-                      Divider(
-                        height: 1,
-                        color: AppColor.DARK_GRAY,
-                      ),
-                      ListTile(
-                        title: Row(
-                          children: [
-                            Icon(
-                              Icons.exit_to_app,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(
-                                "Log Out",
-                                style: TextStyle(
-                                    fontFamily: Constant.DEFAULT_FONT,
-                                    color: Theme.of(context).primaryColor),
-                              ),
-                            )
-                          ],
-                        ),
-                        onTap: () {
-                          widget.bloc.add(LogOutEvent());
-                        },
-                      )
-                    ],
-                  )
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
-      ),
-      body: BlocListener(
-        bloc: _homeCustomerBloc,
-        listener: (context, state) {
-          if (state is LogOut) {
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (_) => Splash()));
-          } else if (state is LogOutError) {
-            _scaffoldKey.currentState.openEndDrawer();
+        BlocBuilder(
+          bloc: _homeCustomerBloc,
+          builder: (context, state) {
+            if (state is LoggingOut) {
+              return OverlayLoader.Overlay();
+            }
 
-            Scaffold.of(context).showSnackBar(SnackBar(
-              duration: Duration(milliseconds: 500),
-              content: Text(
-                "Logout Failed!",
-                style: TextStyle(fontFamily: Constant.DEFAULT_FONT),
-              ),
-            ));
-          }
-        },
-        child: Container(
-          color: AppColor.GRAY,
-          child: Column(
-            children: [
-              Container(
-                height: MediaQuery.of(context).size.height * 0.18,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).accentColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 2,
-                      blurRadius: 3,
-                      offset: Offset(0, 1),
-                    ),
-                  ],
-                ),
-                padding: EdgeInsets.only(left: 15, right: 15),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: MediaQuery.of(context).size.height * 0.072,
-                      margin: const EdgeInsets.only(top: 1),
-                      decoration: BoxDecoration(
-                        border: Border.all(width: 0.2),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 15,
-                          ),
-                          Icon(
-                            Icons.search,
-                            color: AppColor.DARK_GRAY,
-                          ),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              decoration: InputDecoration(
-                                hintText: "Search for 'Category'",
-                                enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color: Colors.transparent, width: 0)),
-                                focusedBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color: Colors.transparent, width: 0)),
-                              ),
-                              style: TextStyle(
-                                  fontFamily: Constant.DEFAULT_FONT,
-                                  fontSize: 18),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              BlocBuilder<HomeCustomerBloc, HomeCustomerState>(
-                bloc: _homeCustomerBloc,
-                builder: (context, state) {
-                  if (state is LoadingCategories) {
-                    isLoaded = false;
-                  } else if (state is ErrorCategories) {
-                    return Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Text(
-                            "Some error occurred!",
-                            style: TextStyle(
-                                color: AppColor.DARK_GRAY,
-                                fontSize: 22,
-                                fontFamily: Constant.DEFAULT_FONT),
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          FlatButton(
-                            color:
-                                Theme.of(context).primaryColor.withOpacity(0.8),
-                            onPressed: () {
-                              _homeCustomerBloc.add(GetAllCategoriesEvent());
-                            },
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(15),
-                              child: Text(
-                                "Try Again",
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontFamily: Constant.DEFAULT_FONT),
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    );
-                  } else if (state is LoadedCategories) {
-                    allCategories = state.categories;
-                    currentCategoies = state.categories;
-                    isLoaded = true;
-
-                    if (currentCategoies.length == 0) {
-                      return Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Text(
-                              "0 Categories Found",
-                              style: TextStyle(
-                                  fontSize: 22,
-                                  fontFamily: Constant.DEFAULT_FONT,
-                                  color: Colors.black.withOpacity(0.6)),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                  } else if (state is SearchedCategories) {
-                    currentCategoies = state.queriedCategories;
-                    isLoaded = true;
-
-                    if (currentCategoies.length == 0) {
-                      return Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Text(
-                              "0 Categories Found",
-                              style: TextStyle(
-                                  fontSize: 22,
-                                  fontFamily: Constant.DEFAULT_FONT,
-                                  color: Colors.black.withOpacity(0.6)),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                  }
-
-                  return _buildBody();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+            return Container();
+          },
+        )
+      ],
     );
   }
 

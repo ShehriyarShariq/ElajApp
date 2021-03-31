@@ -33,9 +33,14 @@ class AvailabilityBloc extends Bloc<AvailabilityEvent, AvailabilityState> {
     if (event is LoadAvailableDaysEvent) {
       yield Loading();
       final failureOrAvailability = await loadAvailableDays(NoParams());
-      yield failureOrAvailability.fold((failure) {
-        return Error(msg: "Some error occurred! Try again");
-      }, (availability) => Loaded(availability: availability));
+      yield failureOrAvailability.fold(
+          (failure) => Error(msg: "Some error occurred! Try again"),
+          (availability) => Loaded(availability: availability));
+
+      // Availability availability = new Availability();
+
+      // availability.availableDays = new List();
+      // availability.availableDays.add(AvailableDay(date: DateTime.now()));
     } else if (event is FetchAllDataEvent) {
       yield Fetching();
     } else if (event is SaveFetchedDataEvent) {
@@ -44,13 +49,15 @@ class AvailabilityBloc extends Bloc<AvailabilityEvent, AvailabilityState> {
       availabilitySingleton.availability.availableDays[event.index] =
           event.property;
 
-      bool isFetchedAll = true;
+      bool isFetchedAll = false;
       for (int i = 0;
           i < availabilitySingleton.availability.availableDays.length;
           i++) {
-        if (availabilitySingleton.availability.availableDays[i] == null) {
+        if (availabilitySingleton.availability.availableDays[i] != null) {
+          isFetchedAll = true;
+          // break;
+        } else {
           isFetchedAll = false;
-          break;
         }
       }
 
@@ -60,6 +67,7 @@ class AvailabilityBloc extends Bloc<AvailabilityEvent, AvailabilityState> {
                 .length ==
             0) {
           yield SnackBarError(msg: "Must select atleast one day");
+          availabilitySingleton.reset();
         } else {
           yield Processing();
           final failureOrSaved = await saveAvailableDays(AvailabilityParams(
@@ -67,7 +75,8 @@ class AvailabilityBloc extends Bloc<AvailabilityEvent, AvailabilityState> {
           yield failureOrSaved.fold(
               (failure) => SnackBarError(msg: "Some error occurred! Try again"),
               (list) =>
-                  list.length > 0 ? Saved() : SlotError(invalidDays: list));
+                  list.length == 0 ? Saved() : SlotError(invalidDays: list));
+          availabilitySingleton.reset();
         }
       }
     } else if (event is Reset) {

@@ -1,8 +1,12 @@
 import 'package:elaj/core/ui/no_glow_scroll_behavior.dart';
 import 'package:elaj/core/util/constants.dart';
+import 'package:elaj/core/util/customer_check_singleton.dart';
 import 'package:elaj/features/common/credentials/presentation/bloc/bloc/credentials_bloc.dart';
 import 'package:elaj/features/common/credentials/presentation/widgets/sign_in.dart';
 import 'package:elaj/features/common/credentials/presentation/widgets/sign_up.dart';
+import 'package:elaj/features/customer/book_appointment/domain/entities/selected_slot.dart';
+import 'package:elaj/features/customer/book_appointment/presentation/pages/patient_details.dart';
+import 'package:elaj/features/customer/categorial_doctors/domain/entities/basic_doctor.dart';
 import 'package:elaj/features/customer/home_customer/presentation/pages/home_customer.dart';
 import 'package:elaj/features/doctor/complete_profile/presentation/pages/doctor_complete_profile.dart';
 import 'package:elaj/features/doctor/home_doctor/presentation/pages/home_doctor.dart';
@@ -12,9 +16,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../injection_container.dart';
 
 class Credentials extends StatefulWidget {
-  final bool isFromCustHome;
+  final bool isFromCustHome, isFromBooking;
+  final BasicDoctor doctor;
+  final SelectedSlot bookingSlot;
 
-  const Credentials({Key key, this.isFromCustHome = false}) : super(key: key);
+  const Credentials(
+      {Key key,
+      this.isFromCustHome = false,
+      this.isFromBooking = false,
+      this.bookingSlot,
+      this.doctor})
+      : super(key: key);
 
   @override
   _CredentialsState createState() => _CredentialsState();
@@ -68,26 +80,44 @@ class _CredentialsState extends State<Credentials> {
                       bloc: _credentialsBloc,
                       listener: (context, state) {
                         if (state is Success) {
-                          Navigator.of(context)
-                              .popUntil((route) => route.isFirst);
+                          if (widget.isFromBooking) {
+                            CustomerCheckSingleton customerCheckSingleton =
+                                new CustomerCheckSingleton();
 
-                          Map<String, bool> map = state.map;
+                            customerCheckSingleton.isCustLoggedIn = true;
 
-                          if (map['isCust']) {
-                            Navigator.of(context)
-                                .pushReplacement(MaterialPageRoute(
-                                    builder: (_) => CustomerHome(
-                                          isCustomer: true,
-                                        )));
+                            Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => PatientDetails(
+                                        doctor: widget.doctor,
+                                        selectedSlot: widget.bookingSlot)));
                           } else {
-                            if (map['isCompleteDoctor']) {
+                            Navigator.of(context)
+                                .popUntil((route) => route.isFirst);
+
+                            Map<String, bool> map = state.map;
+
+                            if (map['isCust']) {
+                              CustomerCheckSingleton customerCheckSingleton =
+                                  new CustomerCheckSingleton();
+
+                              customerCheckSingleton.isCustLoggedIn = true;
+
                               Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
-                                      builder: (_) => DoctorHome()));
+                                      builder: (_) => CustomerHome()));
                             } else {
-                              Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                      builder: (_) => DoctorCompleteProfile()));
+                              if (map['isCompleteDoctor']) {
+                                Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                        builder: (_) => DoctorHome()));
+                              } else {
+                                Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                        builder: (_) =>
+                                            DoctorCompleteProfile()));
+                              }
                             }
                           }
                         } else if (state is Error) {

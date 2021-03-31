@@ -11,11 +11,11 @@ import '../../../../../injection_container.dart';
 
 class ExpandableListWidget extends StatefulWidget {
   final AvailabilityBloc availabilityBloc;
-  final bool isSelected;
+  final bool isEditable;
   final AvailableDay day;
 
   const ExpandableListWidget(
-      {Key key, this.isSelected = false, this.day, this.availabilityBloc})
+      {Key key, this.day, this.availabilityBloc, this.isEditable})
       : super(key: key);
 
   @override
@@ -28,8 +28,9 @@ class _ExpandableListWidgetState extends State<ExpandableListWidget> {
 
   @override
   void initState() {
-    _isSelected = widget.isSelected;
-    _isExpanded = false;
+    _isSelected =
+        widget.day != null ? widget.day.slots.length > 0 ? true : false : false;
+    _isExpanded = _isSelected;
     _isError = false;
 
     _slots = widget.day.slots;
@@ -102,18 +103,22 @@ class _ExpandableListWidgetState extends State<ExpandableListWidget> {
                                   ? _isError ? Colors.white : Colors.black
                                   : Colors.black.withOpacity(0.4)),
                         ),
-                        Switch(
-                          value: _isSelected,
-                          onChanged: (value) {
-                            setState(() {
-                              _isSelected = value;
-                            });
-                          },
-                          inactiveTrackColor: Colors.black.withOpacity(0.15),
-                          activeTrackColor:
-                              Theme.of(context).primaryColor.withOpacity(0.4),
-                          activeColor: Theme.of(context).primaryColor,
-                        ),
+                        widget.isEditable
+                            ? Switch(
+                                value: _isSelected,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isSelected = value;
+                                  });
+                                },
+                                inactiveTrackColor:
+                                    Colors.black.withOpacity(0.15),
+                                activeTrackColor: Theme.of(context)
+                                    .primaryColor
+                                    .withOpacity(0.4),
+                                activeColor: Theme.of(context).primaryColor,
+                              )
+                            : Container(),
                       ],
                     ),
                   ),
@@ -134,25 +139,28 @@ class _ExpandableListWidgetState extends State<ExpandableListWidget> {
                           SizedBox(
                             height: 20,
                           ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _isError = false;
+                          widget.isEditable
+                              ? Align(
+                                  alignment: Alignment.centerRight,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _isError = false;
 
-                                  widget.day.slots.add(DaySlot());
-                                });
-                              },
-                              child: Text(
-                                "Add Another Slot",
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    fontFamily: Constant.DEFAULT_FONT,
-                                    color: Theme.of(context).primaryColor),
-                              ),
-                            ),
-                          ),
+                                        widget.day.slots.add(DaySlot());
+                                      });
+                                    },
+                                    child: Text(
+                                      "Add Another Slot",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontFamily: Constant.DEFAULT_FONT,
+                                          color:
+                                              Theme.of(context).primaryColor),
+                                    ),
+                                  ),
+                                )
+                              : Container(),
                           SizedBox(
                             height: 15,
                           )
@@ -199,7 +207,9 @@ class _ExpandableListWidgetState extends State<ExpandableListWidget> {
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
-                              _showTimePicker(index: index);
+                              if (widget.isEditable) {
+                                _showTimePicker(index: index);
+                              }
                             },
                             child: Container(
                               padding: const EdgeInsets.all(10),
@@ -241,7 +251,8 @@ class _ExpandableListWidgetState extends State<ExpandableListWidget> {
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
-                              if (_slots[index].start != null) {
+                              if (_slots[index].start != null &&
+                                  widget.isEditable) {
                                 _showTimePicker(
                                     isStartTime: false, index: index);
                               }
@@ -267,34 +278,39 @@ class _ExpandableListWidgetState extends State<ExpandableListWidget> {
               ),
             ),
           ),
-          Container(
-            height: 30,
-            width: 30,
-            decoration: BoxDecoration(
-                color: Theme.of(context).errorColor,
-                borderRadius: BorderRadius.circular(15)),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                radius: 30,
-                borderRadius: BorderRadius.circular(15),
-                onTap: () {
-                  setState(() {
-                    _slots.removeAt(index);
+          widget.isEditable
+              ? Container(
+                  height: 30,
+                  width: 30,
+                  decoration: BoxDecoration(
+                      color: Theme.of(context).errorColor,
+                      borderRadius: BorderRadius.circular(15)),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      radius: 30,
+                      borderRadius: BorderRadius.circular(15),
+                      onTap: () {
+                        setState(() {
+                          _slots.removeAt(index);
 
-                    if (_slots.length == 0) _isError = true;
-                  });
-                },
-                child: Container(
-                  child: Icon(
-                    Icons.remove,
-                    size: 28,
-                    color: Colors.white,
+                          if (_slots.length == 0) _isError = true;
+                        });
+                      },
+                      child: Container(
+                        child: Icon(
+                          Icons.remove,
+                          size: 28,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
-          )
+                )
+              : SizedBox(
+                  height: 30,
+                  width: 30,
+                )
         ],
       ),
     );
@@ -303,21 +319,27 @@ class _ExpandableListWidgetState extends State<ExpandableListWidget> {
   _showTimePicker({bool isStartTime = true, int index}) {
     showTimePicker(context: context, initialTime: TimeOfDay.now())
         .then((selectedTime) {
-      DateTime slotTime = DateTime(widget.day.date.year, widget.day.date.month,
-          widget.day.date.day, selectedTime.hour, selectedTime.minute);
+      if (selectedTime != null) {
+        DateTime slotTime = DateTime(
+            widget.day.date.year,
+            widget.day.date.month,
+            widget.day.date.day,
+            selectedTime.hour,
+            selectedTime.minute);
 
-      setState(() {
-        if (isStartTime) {
-          _slots[index].start = slotTime;
-        } else {
-          if (slotTime.isAfter(_slots[index].start)) {
-            _slots[index].end = slotTime;
-            _isError = false;
+        setState(() {
+          if (isStartTime) {
+            _slots[index].start = slotTime;
           } else {
-            _isError = true;
+            if (slotTime.isAfter(_slots[index].start)) {
+              _slots[index].end = slotTime;
+              _isError = false;
+            } else {
+              _isError = true;
+            }
           }
-        }
-      });
+        });
+      }
     });
   }
 }

@@ -44,3 +44,11 @@ class PaymentStatusChecked extends BookAppointmentState {
 
   PaymentStatusChecked({this.isPayNow}) : super([isPayNow]);
 }
+
+class UserCheck extends BookAppointmentState {
+  final bool isUser;
+
+  UserCheck({this.isUser}) : super([isUser]);
+}
+
+class Dummy extends BookAppointmentState {}

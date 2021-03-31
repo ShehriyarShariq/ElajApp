@@ -71,7 +71,6 @@ class _AddMedicalRecordState extends State<AddMedicalRecord> {
 
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (_) => CustomerHome(
-                            isCustomer: true,
                             startFromTab: 2,
                           )));
                 } else if (state is Error) {
@@ -182,7 +181,7 @@ class _AddMedicalRecordState extends State<AddMedicalRecord> {
                             height: 50,
                             child: Center(
                               child: Text(
-                                "Book Appointment",
+                                "Save",
                                 style: TextStyle(
                                     fontSize: 20,
                                     fontFamily: Constant.DEFAULT_FONT,

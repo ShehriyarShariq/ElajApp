@@ -9,8 +9,9 @@ import 'package:intl/intl.dart';
 
 class MedicalRecordsListItem extends StatefulWidget {
   final MedicalRecord medicalRecord;
+  final bool canEdit;
 
-  MedicalRecordsListItem(this.medicalRecord);
+  MedicalRecordsListItem(this.medicalRecord, {this.canEdit = true});
 
   @override
   _MedicalRecordsListItemState createState() => _MedicalRecordsListItemState();
@@ -18,6 +19,11 @@ class MedicalRecordsListItem extends StatefulWidget {
 
 class _MedicalRecordsListItemState extends State<MedicalRecordsListItem> {
   bool _isExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,23 +90,6 @@ class _MedicalRecordsListItemState extends State<MedicalRecordsListItem> {
                 child: CircleAvatar(
                   radius: 15,
                 ),
-                // Material(
-                //   color: Theme.of(context).primaryColor,
-                //   borderRadius: BorderRadius.circular(15),
-                //   child: InkWell(
-                //     onTap: () {},
-                //     borderRadius: BorderRadius.circular(15),
-                //     child: SizedBox(
-                //       width: 30,
-                //       height: 30,
-                //       child: Icon(
-                //         Icons.edit,
-                //         color: Colors.white,
-                //         size: 18,
-                //       ),
-                //     ),
-                //   ),
-                // ),
               )
             ],
           ),
@@ -127,7 +116,6 @@ class _MedicalRecordsListItemState extends State<MedicalRecordsListItem> {
     return Container(
       margin: const EdgeInsets.fromLTRB(0, 7.5, 0, 7.5),
       padding: const EdgeInsets.all(10),
-      // height: 80,
       color: Theme.of(context).accentColor,
       child: Column(
         children: [
@@ -140,19 +128,17 @@ class _MedicalRecordsListItemState extends State<MedicalRecordsListItem> {
                 child: Container(
                   width: (MediaQuery.of(context).size.width - 15) * 0.20,
                   height: (MediaQuery.of(context).size.width - 15) * 0.20,
+                  alignment: Alignment.center,
                   color: AppColor.DARK_GRAY,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                    child: FittedBox(
-                      fit: BoxFit.fitWidth,
-                      child: Text(
-                        DateFormat("MMMM\ndd")
-                            .format(widget.medicalRecord.date),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: AppColor.GRAY,
-                            fontFamily: Constant.DEFAULT_FONT),
-                      ),
+                    child: Text(
+                      DateFormat("MMM\ndd").format(widget.medicalRecord.date),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: AppColor.GRAY,
+                          fontFamily: Constant.DEFAULT_FONT,
+                          fontSize: 18),
                     ),
                   ),
                 ),
@@ -177,57 +163,6 @@ class _MedicalRecordsListItemState extends State<MedicalRecordsListItem> {
                               fontSize: 17, fontFamily: Constant.DEFAULT_FONT),
                         ),
                       ),
-
-                      // // Doctor Name
-                      // Container(
-                      //   margin: const EdgeInsets.only(top: 20),
-                      //   width: constraints.maxWidth,
-                      //   child: RichText(
-                      //     text: TextSpan(
-                      //         text: "Doctor: ",
-                      //         style: TextStyle(
-                      //             fontSize: 15,
-                      //             fontFamily: Constant.DEFAULT_FONT,
-                      //             color: Colors.black,
-                      //             fontWeight: FontWeight.bold),
-                      //         children: <TextSpan>[
-                      //           TextSpan(
-                      //               text:
-                      //                   widget.medicalRecord.doctorName == null
-                      //                       ? "N/A"
-                      //                       : widget.medicalRecord.doctorName,
-                      //               style: TextStyle(
-                      //                   fontSize: 17,
-                      //                   fontWeight: FontWeight.normal))
-                      //         ]),
-                      //   ),
-                      // ),
-
-                      // // Doctor Specialty
-                      // Container(
-                      //   margin: const EdgeInsets.only(top: 10),
-                      //   width: constraints.maxWidth,
-                      //   child: RichText(
-                      //     text: TextSpan(
-                      //         text: "Specialty: ",
-                      //         style: TextStyle(
-                      //             fontSize: 15,
-                      //             fontFamily: Constant.DEFAULT_FONT,
-                      //             color: Colors.black,
-                      //             fontWeight: FontWeight.bold),
-                      //         children: <TextSpan>[
-                      //           TextSpan(
-                      //               text: widget.medicalRecord
-                      //                           .doctorSpecialty ==
-                      //                       null
-                      //                   ? "N/A"
-                      //                   : widget.medicalRecord.doctorSpecialty,
-                      //               style: TextStyle(
-                      //                   fontSize: 17,
-                      //                   fontWeight: FontWeight.normal))
-                      //         ]),
-                      //   ),
-                      // ),
                     ],
                   );
                 },
@@ -235,30 +170,32 @@ class _MedicalRecordsListItemState extends State<MedicalRecordsListItem> {
               SizedBox(
                 width: 15,
               ),
-              Material(
-                borderRadius: BorderRadius.circular(15),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => AddMedicalRecord(
-                                  medicalRecord: widget.medicalRecord,
-                                )));
-                  },
-                  borderRadius: BorderRadius.circular(15),
-                  child: CircleAvatar(
-                    backgroundColor:
-                        Theme.of(context).primaryColor.withOpacity(0.6),
-                    radius: 15,
-                    child: Icon(
-                      Icons.edit,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              )
+              widget.canEdit
+                  ? Material(
+                      borderRadius: BorderRadius.circular(15),
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => AddMedicalRecord(
+                                        medicalRecord: widget.medicalRecord,
+                                      )));
+                        },
+                        borderRadius: BorderRadius.circular(15),
+                        child: CircleAvatar(
+                          backgroundColor:
+                              Theme.of(context).primaryColor.withOpacity(0.6),
+                          radius: 15,
+                          child: Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Container()
             ],
           ),
           !_isExpanded

@@ -2,6 +2,8 @@ import 'package:elaj/core/ui/loading_widget.dart';
 import 'package:elaj/core/ui/no_glow_scroll_behavior.dart';
 import 'package:elaj/core/util/colors.dart';
 import 'package:elaj/core/util/constants.dart';
+import 'package:elaj/core/util/customer_check_singleton.dart';
+import 'package:elaj/features/common/credentials/presentation/pages/credentials.dart';
 import 'package:elaj/features/customer/book_appointment/domain/entities/booking_singleton.dart';
 import 'package:elaj/features/customer/book_appointment/domain/entities/selected_slot.dart';
 import 'package:elaj/features/customer/book_appointment/presentation/bloc/bloc/book_appointment_bloc.dart';
@@ -52,118 +54,131 @@ class _BookAppointmentState extends State<BookAppointment> {
                 fontSize: Constant.TITLE_SIZE,
                 fontFamily: Constant.DEFAULT_FONT)),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                HeaderWidget(doctor: widget.doctor),
-                BlocBuilder(
-                  bloc: _bookAppointmentBloc,
-                  builder: (context, state) {
-                    print(state);
-                    if (state is Loading || state is Initial) {
-                      return Expanded(
-                        child: Container(
-                            color: AppColor.GRAY, child: LoadingWidget()),
-                      );
-                    } else if (state is Error) {
-                      return Expanded(
-                        child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          color: AppColor.GRAY,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "Some error occurred! Try again",
-                                style: TextStyle(
-                                    color: AppColor.DARK_GRAY,
-                                    fontSize: 22,
-                                    fontFamily: Constant.DEFAULT_FONT),
-                              ),
-                              SizedBox(
-                                height: 20,
-                              ),
-                              FlatButton(
-                                color: Theme.of(context)
-                                    .primaryColor
-                                    .withOpacity(0.8),
-                                onPressed: () {
-                                  _bookAppointmentBloc.add(
-                                      GetDoctorTimingsEvent(
-                                          doctorID: widget.doctor.id));
-                                },
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(5)),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(15),
-                                  child: Text(
-                                    "Try Again",
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontFamily: Constant.DEFAULT_FONT),
-                                  ),
+      body: BlocListener(
+        bloc: _bookAppointmentBloc,
+        listener: (context, state) {
+          if (state is UserCheck) {
+            if (state.isUser) {
+              onValidSelectionSuccess();
+            } else {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => Credentials(
+                            isFromBooking: true,
+                            doctor: widget.doctor,
+                            bookingSlot: currentSelectedSlot,
+                          )));
+            }
+
+            _bookAppointmentBloc.add(DummyEvent());
+          }
+        },
+        child: Column(
+          children: [
+            Expanded(
+              child: Column(
+                children: [
+                  HeaderWidget(doctor: widget.doctor),
+                  BlocBuilder(
+                    bloc: _bookAppointmentBloc,
+                    builder: (context, state) {
+                      if (state is Loading || state is Initial) {
+                        return Expanded(
+                          child: Container(
+                              color: AppColor.GRAY, child: LoadingWidget()),
+                        );
+                      } else if (state is Error) {
+                        return Expanded(
+                          child: Container(
+                            width: MediaQuery.of(context).size.width,
+                            color: AppColor.GRAY,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Some error occurred! Try again",
+                                  style: TextStyle(
+                                      color: AppColor.DARK_GRAY,
+                                      fontSize: 22,
+                                      fontFamily: Constant.DEFAULT_FONT),
                                 ),
-                              )
-                            ],
+                                SizedBox(
+                                  height: 20,
+                                ),
+                                FlatButton(
+                                  color: Theme.of(context)
+                                      .primaryColor
+                                      .withOpacity(0.8),
+                                  onPressed: () {
+                                    _bookAppointmentBloc.add(
+                                        GetDoctorTimingsEvent(
+                                            doctorID: widget.doctor.id));
+                                  },
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(5)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(15),
+                                    child: Text(
+                                      "Try Again",
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontFamily: Constant.DEFAULT_FONT),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    } else if (state is Loaded) {
-                      availability = state.availability;
-                    }
+                        );
+                      } else if (state is Loaded) {
+                        availability = state.availability;
+                      }
 
-                    if (availability != null) print("AAAAAAAAAAAAAA");
+                      if (availability != null) print("AAAAAAAAAAAAAA");
 
-                    return _buildBody(context, availability);
-                  },
-                ),
-              ],
+                      return _buildBody(context, availability);
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-          currentSelectedSlot.isSet()
-              ? Container(
-                  height: 60,
-                  margin: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                  color: Theme.of(context).primaryColor,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        BookingSingleton bookingSingleton =
-                            new BookingSingleton();
-                        bookingSingleton.booking.doctorId = widget.doctor.id;
-                        bookingSingleton.booking.categoryID =
-                            widget.doctor.categoryId;
-                        bookingSingleton.booking.date =
-                            currentSelectedSlot.day.date;
-                        bookingSingleton.booking.startTime =
-                            currentSelectedSlot.daySlot.start;
+            currentSelectedSlot.isSet()
+                ? Container(
+                    height: 60,
+                    margin: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                    color: Theme.of(context).primaryColor,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          CustomerCheckSingleton customerCheckSingleton =
+                              new CustomerCheckSingleton();
 
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (_) => PatientDetails(
-                                  doctor: widget.doctor,
-                                )));
-                      },
-                      child: Container(
-                        height: 60,
-                        child: Center(
-                          child: Text(
-                            "Next",
-                            style: TextStyle(
-                                fontSize: 20,
-                                color: Theme.of(context).accentColor,
-                                fontFamily: Constant.DEFAULT_FONT),
+                          if (customerCheckSingleton.isCustLoggedIn)
+                            onValidSelectionSuccess();
+                          else
+                            _bookAppointmentBloc.add(CheckUserEvent());
+                        },
+                        child: Container(
+                          height: 60,
+                          child: Center(
+                            child: Text(
+                              "Next",
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  color: Theme.of(context).accentColor,
+                                  fontFamily: Constant.DEFAULT_FONT),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                )
-              : Container()
-        ],
+                  )
+                : Container()
+          ],
+        ),
       ),
     );
   }
@@ -223,7 +238,8 @@ class _BookAppointmentState extends State<BookAppointment> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: currentSelectedSlot.day.slots != null
+                    children: currentSelectedSlot.day.slots != null &&
+                            currentSelectedSlot.day.slots.length > 0
                         ? currentSelectedSlot.day.slots
                             .map((slot) => _slotItemWidget(slot))
                             .toList()
@@ -311,7 +327,7 @@ class _BookAppointmentState extends State<BookAppointment> {
           padding: const EdgeInsets.only(left: 10, right: 10),
           child: Center(
             child: Text(
-              DateFormat('HH:mm').format(slotTime.start) +
+              DateFormat('hh:mm').format(slotTime.start) +
                   (slotTime.start.hour >= 12 ? "PM" : "AM"),
               style: TextStyle(fontSize: 15, fontFamily: Constant.DEFAULT_FONT),
             ),
@@ -319,5 +335,19 @@ class _BookAppointmentState extends State<BookAppointment> {
         ),
       ),
     );
+  }
+
+  void onValidSelectionSuccess() {
+    BookingSingleton bookingSingleton = BookingSingleton();
+    bookingSingleton.booking.doctorId = widget.doctor.id;
+    bookingSingleton.booking.categoryID = widget.doctor.categoryId;
+    bookingSingleton.booking.date = currentSelectedSlot.day.date;
+    bookingSingleton.booking.startTime = currentSelectedSlot.daySlot.start;
+
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => PatientDetails(
+              doctor: widget.doctor,
+              selectedSlot: currentSelectedSlot,
+            )));
   }
 }

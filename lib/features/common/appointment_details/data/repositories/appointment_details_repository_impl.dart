@@ -118,8 +118,6 @@ class AppointmentDetailsRepositoryImpl extends AppointmentDetailsRepository {
       String appointmentID) async {
     if (networkInfo.isConnected != null) {
       try {
-        BasicAppointment appointment = BasicAppointment();
-
         CachedBasicAppointmentsSingleton cachedBasicAppointments =
             CachedBasicAppointmentsSingleton();
 
@@ -131,50 +129,34 @@ class AppointmentDetailsRepositoryImpl extends AppointmentDetailsRepository {
 
         Map<String, dynamic> appointmentMap = new Map();
 
-        if (cachedBasicAppointments.currentAppointments
-            .containsKey(appointmentID)) {
-          appointment =
-              cachedBasicAppointments.currentAppointments[appointmentID];
-        } else {
-          appointmentMap['id'] = appointmentID;
-          await FirebaseInit.dbRef
-              .child("appointment/$appointmentID/basic")
-              .once()
-              .then((appointmentSnapshot) {
-            if (appointmentSnapshot.value == null) throw NoResultException();
+        // if (!cachedBasicAppointments.currentAppointments
+        //     .containsKey(appointmentID)) {
+        appointmentMap['id'] = appointmentID;
+        await FirebaseInit.dbRef
+            .child("appointment/$appointmentID/basic")
+            .once()
+            .then((appointmentSnapshot) {
+          if (appointmentSnapshot.value == null) throw NoResultException();
+          print(appointmentSnapshot.value);
+          appointmentMap
+              .addAll(Map<String, dynamic>.from(appointmentSnapshot.value));
+        });
 
-            appointmentMap
-                .addAll(Map<String, dynamic>.from(appointmentSnapshot.value));
+        await FirebaseInit.dbRef
+            .child((!isCust ? "customer/${ids[2]}" : "/doctor/${ids[1]}") +
+                "/details/basic")
+            .once()
+            .then((userSnapshot) {
+          if (userSnapshot.value == null) throw NoResultException();
 
-            // Map<String, dynamic> basicMap = appointmentSnapShot.value;
-            // appointment.start = basicMap['start'];
-            // appointment.end = basicMap['end'];
-            // appointment.status = basicMap['status'];
-            // appointment.other = basicMap.containsKey('other')
-            //     ? Other.fromJson(basicMap['other'])
-            //     : null;
-            // appointment.isPaid = basicMap['isPaid'];
-          });
+          Map<String, dynamic> userMap =
+              Map<String, dynamic>.from(userSnapshot.value);
+          print(userMap);
+          if (!isCust) userMap.remove('gender');
 
-          await FirebaseInit.dbRef
-              .child((isCust ? "customer/${ids[2]}" : "/doctor/${ids[1]}") +
-                  "/details/basic")
-              .once()
-              .then((userSnapshot) {
-            if (userSnapshot.value == null) throw NoResultException();
-
-            if (isCust)
-              Map<String, dynamic>.from(userSnapshot.value).remove('gender');
-
-            appointmentMap
-                .addAll(Map<String, dynamic>.from(userSnapshot.value));
-
-            // Map<String, dynamic> basicMap = userSnapShot.value;
-            // appointment.name = basicMap["name"];
-            // appointment.photoURL = basicMap["picture"];
-            // appointment.gender = !isCust ? basicMap["gender"] : null;
-          });
-        }
+          appointmentMap.addAll(userMap);
+        });
+        // }
 
         if (!isCust) {
           List<MedicalRecord> medicalRecords = List();
@@ -182,29 +164,37 @@ class AppointmentDetailsRepositoryImpl extends AppointmentDetailsRepository {
               .child("customer/${ids[2]}/details/medicalRecord")
               .once()
               .then((snapshot) {
-            if (snapshot.value == null) throw NoResultException();
+            if (snapshot.value != null) {
+              Map<String, dynamic> records =
+                  Map<String, dynamic>.from(snapshot.value);
+              List<String> ids = records.keys.toList();
 
-            Map<String, dynamic> records =
-                Map<String, dynamic>.from(snapshot.value);
-            Iterable<String> ids = records.keys;
+              for (int i = 0; i < records.length; i++) {
+                records[ids[i]]['id'] = ids.elementAt(i);
+                medicalRecords
+                    .add(MedicalRecord.fromJson(records[ids.elementAt(i)]));
+              }
 
-            for (int i = 0; i < records.length; i++) {
-              records[ids.elementAt(i)]['id'] = ids.elementAt(i);
-              medicalRecords
-                  .add(MedicalRecord.fromJson(records[ids.elementAt(i)]));
+              appointmentMap['medicalRecords'] = medicalRecords;
             }
-
-            appointmentMap['medicalRecords'] = medicalRecords;
           });
+        } else {
+          appointmentMap['medicalRecords'] = [];
         }
+
+        print(appointmentMap);
 
         cachedBasicAppointments.currentAppointments[appointmentID] =
             BasicAppointment.fromJson(appointmentMap);
 
-        return Right(appointment);
+        print(cachedBasicAppointments.currentAppointments[appointmentID]);
+
+        return Right(
+            cachedBasicAppointments.currentAppointments[appointmentID]);
       } on NoResultException {
         return Left(NoResultFailure());
       } catch (e) {
+        print(e.toString());
         return Left(DbLoadFailure());
       }
     } else {

@@ -1,7 +1,9 @@
 import 'package:elaj/core/util/colors.dart';
 import 'package:elaj/features/common/all_appointments/domain/entities/basic_appointment.dart';
+import 'package:elaj/features/common/appointment_details/presentation/pages/appointment_details.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:intl/intl.dart';
 
 class AppointmentsListItem extends StatelessWidget {
   BasicAppointment appointment;
@@ -14,7 +16,12 @@ class AppointmentsListItem extends StatelessWidget {
     return appointment == null
         ? _getLoadView(context)
         : GestureDetector(
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => AppointmentDetails(
+                        appointmentID: appointment.id,
+                      )));
+            },
             child: Container(
               margin: const EdgeInsets.fromLTRB(0, 7.5, 0, 7.5),
               padding: const EdgeInsets.all(10),
@@ -32,12 +39,14 @@ class AppointmentsListItem extends StatelessWidget {
                       padding: EdgeInsets.all(
                           (MediaQuery.of(context).size.width - 15) * 0.025),
                       child: FadeInImage(
-                          image: AssetImage(appointment?.gender != null
-                              ? appointment.gender == "M"
-                                  ? "imgs/doctor_male.png"
-                                  : "imgs/doctor_female.png"
-                              : "imgs/patient.png"), //NetworkImage(appointment.photoURL),
-                          placeholder: AssetImage(appointment?.gender != null
+                          image: appointment.photoURL != null
+                              ? NetworkImage(appointment.photoURL)
+                              : AssetImage(appointment.gender != null
+                                  ? appointment.gender == "M"
+                                      ? "imgs/doctor_male.png"
+                                      : "imgs/doctor_female.png"
+                                  : "imgs/patient.png"),
+                          placeholder: AssetImage(appointment.gender != null
                               ? appointment.gender == "M"
                                   ? "imgs/doctor_male.png"
                                   : "imgs/doctor_female.png"
@@ -62,7 +71,7 @@ class AppointmentsListItem extends StatelessWidget {
                                 child: Text(
                                   "Dr. Hamza Iqbal",
                                   style: TextStyle(
-                                      fontFamily: "Robotto",
+                                      fontFamily: "Roboto",
                                       fontWeight: FontWeight.bold,
                                       fontSize: 17),
                                 ),
@@ -79,12 +88,12 @@ class AppointmentsListItem extends StatelessWidget {
                                   text: "For: ",
                                   style: TextStyle(
                                       fontSize: 14,
-                                      fontFamily: "Robotto",
+                                      fontFamily: "Roboto",
                                       color: Colors.black,
                                       fontWeight: FontWeight.bold),
                                   children: <TextSpan>[
                                     TextSpan(
-                                        text: appointment?.other == null
+                                        text: appointment.other == null
                                             ? "Self"
                                             : "Other",
                                         style: TextStyle(
@@ -95,7 +104,7 @@ class AppointmentsListItem extends StatelessWidget {
                           ),
 
                           // For Details
-                          appointment?.other == null
+                          appointment.other != null
                               ? Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: Row(
@@ -109,17 +118,13 @@ class AppointmentsListItem extends StatelessWidget {
                                               text: "Name: ",
                                               style: TextStyle(
                                                   fontSize: 14,
-                                                  fontFamily: "Robotto",
+                                                  fontFamily: "Roboto",
                                                   color: Colors.black,
                                                   fontWeight: FontWeight.bold),
                                               children: <TextSpan>[
                                                 TextSpan(
-                                                    text: appointment
-                                                                ?.other?.name ==
-                                                            null
-                                                        ? "N/A"
-                                                        : appointment
-                                                            .other.name,
+                                                    text:
+                                                        appointment.other.name,
                                                     style: TextStyle(
                                                         fontSize: 16,
                                                         fontWeight:
@@ -136,17 +141,13 @@ class AppointmentsListItem extends StatelessWidget {
                                               text: "Relation: ",
                                               style: TextStyle(
                                                   fontSize: 14,
-                                                  fontFamily: "Robotto",
+                                                  fontFamily: "Roboto",
                                                   color: Colors.black,
                                                   fontWeight: FontWeight.bold),
                                               children: <TextSpan>[
                                                 TextSpan(
-                                                    text: appointment?.other
-                                                                ?.relationShip ==
-                                                            null
-                                                        ? "N/A"
-                                                        : appointment
-                                                            .other.relationShip,
+                                                    text: appointment
+                                                        .other.relationShip,
                                                     style: TextStyle(
                                                         fontSize: 16,
                                                         fontWeight:
@@ -163,6 +164,36 @@ class AppointmentsListItem extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 30),
                             child: Row(
                               children: [
+                                Flexible(
+                                  child: RichText(
+                                    overflow: TextOverflow.clip,
+                                    softWrap: false,
+                                    text: TextSpan(
+                                        text: "Date: ",
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            fontFamily: "Roboto",
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                        children: <TextSpan>[
+                                          TextSpan(
+                                              text: _formatDate(
+                                                  appointment.start),
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight:
+                                                      FontWeight.normal))
+                                        ]),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
                                 Container(
                                   width: (constraints.maxWidth / 2) - 7.5,
                                   child: RichText(
@@ -172,14 +203,13 @@ class AppointmentsListItem extends StatelessWidget {
                                         text: "Start: ",
                                         style: TextStyle(
                                             fontSize: 14,
-                                            fontFamily: "Robotto",
+                                            fontFamily: "Roboto",
                                             color: Colors.black,
                                             fontWeight: FontWeight.bold),
                                         children: <TextSpan>[
                                           TextSpan(
-                                              text: appointment?.start == null
-                                                  ? "N/A"
-                                                  : appointment.start,
+                                              text: _formatTime(
+                                                  appointment.start),
                                               style: TextStyle(
                                                   fontSize: 16,
                                                   fontWeight:
@@ -196,14 +226,13 @@ class AppointmentsListItem extends StatelessWidget {
                                         text: "End: ",
                                         style: TextStyle(
                                             fontSize: 14,
-                                            fontFamily: "Robotto",
+                                            fontFamily: "Roboto",
                                             color: Colors.black,
                                             fontWeight: FontWeight.bold),
                                         children: <TextSpan>[
                                           TextSpan(
-                                              text: appointment?.end == null
-                                                  ? "N/A"
-                                                  : appointment.end,
+                                              text:
+                                                  _formatTime(appointment.end),
                                               style: TextStyle(
                                                   fontSize: 16,
                                                   fontWeight:
@@ -344,5 +373,13 @@ class AppointmentsListItem extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime time) {
+    return (DateFormat("dd-MM-yyyy")).format(time.toLocal());
+  }
+
+  String _formatTime(DateTime time) {
+    return (DateFormat.jm()).format(time.toLocal());
   }
 }
